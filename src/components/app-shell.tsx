@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
   SidebarFooter,
 } from '@/components/ui/sidebar';
-import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck } from 'lucide-react';
+import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -76,10 +76,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['user'] },
     { href: '/admin/dashboard', label: 'Admin Dashboard', icon: ShieldCheck, roles: ['admin'] },
     { href: '/super-admin/dashboard', label: 'SA Dashboard', icon: ShieldCheck, roles: ['super-admin'] },
-    // Corrected link to point to `/borrowers` as per directory structure
     { href: '/borrowers', label: 'Users', icon: Users, roles: ['admin', 'super-admin'] },
     { href: '/super-admin/users', label: 'Manage Roles', icon: UserCog, roles: ['super-admin'] },
     { href: '/loans', label: 'All Loans', icon: Landmark, roles: ['admin', 'super-admin'] },
+    { href: '/admin/form-series', label: 'Form Series', icon: FileKey, roles: ['admin', 'super-admin'] },
   ];
 
   const userNavItems = navItems.filter(item => item.roles.includes(user.role));
@@ -93,6 +93,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     if (pathname.startsWith('/loans/')) return 'Loan Details';
     if (pathname.startsWith('/loans')) return 'All Loans';
     if (pathname.startsWith('/super-admin/users')) return 'Manage User Roles';
+    if (pathname.startsWith('/admin/form-series')) return 'Form Series Registry';
     return 'Oriango';
   }
   

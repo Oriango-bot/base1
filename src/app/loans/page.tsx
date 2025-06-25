@@ -28,10 +28,10 @@ export default async function LoansPage() {
           <TableHeader>
             <TableRow>
               <TableHead>Borrower</TableHead>
+              <TableHead>Form Number</TableHead>
               <TableHead>Amount</TableHead>
               <TableHead className="hidden md:table-cell">Outstanding</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="hidden sm:table-cell">Next Due Date</TableHead>
               <TableHead>
                 <span className="sr-only">Actions</span>
               </TableHead>
@@ -40,19 +40,16 @@ export default async function LoansPage() {
           <TableBody>
             {allLoans.map((loan) => {
               const outstanding = calculateOutstandingBalance(loan);
-              const nextDueDate = getNextDueDate(loan);
               return (
                 <TableRow key={loan.id}>
                   <TableCell className="font-medium">{loan.borrowerName}</TableCell>
+                  <TableCell className="font-mono text-muted-foreground">{loan.formNumber}</TableCell>
                   <TableCell>{formatCurrency(loan.amount)}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatCurrency(outstanding)}</TableCell>
                   <TableCell>
                      <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')} className="capitalize">
                         {loan.status}
                     </Badge>
-                  </TableCell>
-                  <TableCell className="hidden sm:table-cell text-muted-foreground">
-                    {nextDueDate ? nextDueDate.toLocaleDateString() : 'N/A'}
                   </TableCell>
                   <TableCell className="text-right">
                     <Button asChild variant="ghost" size="icon">

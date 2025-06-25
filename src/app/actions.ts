@@ -3,7 +3,7 @@
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
 import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
-import type { Loan, User, UserRole } from '@/lib/types';
+import type { Loan, User, UserRole, FormSeries } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -105,6 +105,7 @@ export async function signupUser(data: FormData): Promise<{ user: User; error: s
       address,
       role,
       joinDate: new Date().toISOString(),
+      partnerId: 1, // Default to Oriango
     };
 
     const result = await usersCollection.insertOne(newUserDoc);
@@ -141,6 +142,86 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 
 // --- Loan Actions ---
 
+export async function createLoan(formData: FormData) {
+  const amount = parseFloat(formData.get('amount') as string);
+  const interestRate = parseFloat(formData.get('interestRate') as string);
+  const repaymentSchedule = formData.get('repaymentSchedule') as 'weekly' | 'monthly';
+  const formNumber = formData.get('formNumber') as string;
+  const borrowerId = formData.get('borrowerId') as string;
+  const createdBy = formData.get('createdBy') as string;
+
+  if (!amount || !interestRate || !repaymentSchedule || !formNumber || !borrowerId || !createdBy) {
+    return { success: false, error: 'Missing required loan data.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    
+    const creator = await db.collection('users').findOne({ _id: new ObjectId(createdBy) });
+    if (!creator) {
+        return { success: false, error: 'Loan creator not found.' };
+    }
+    // @ts-ignore
+    const partnerId = creator.partnerId;
+
+    const existingLoan = await db.collection('loans').findOne({ formNumber });
+    if (existingLoan) {
+      return { success: false, error: `Form number ${formNumber} is already in use.` };
+    }
+
+    let validationSource = 'uniqueness_only';
+
+    const activeSeries = await db.collection('form_series_register').findOne({ 
+        partner_id: partnerId,
+        status: 'active'
+    });
+    
+    if (activeSeries) {
+        validationSource = 'form_series_register';
+        
+        if (!formNumber.startsWith(activeSeries.prefix)) {
+            return { success: false, error: `Form number must start with prefix "${activeSeries.prefix}".` };
+        }
+
+        const numberPart = formNumber.substring(activeSeries.prefix.length);
+        const number = parseInt(numberPart, 10);
+
+        if (isNaN(number)) {
+            return { success: false, error: 'Form number does not contain a valid number after the prefix.' };
+        }
+
+        if (number < activeSeries.start_number || number > activeSeries.end_number) {
+            return { success: false, error: `Form number ${number} is outside the allowed range (${activeSeries.start_number}-${activeSeries.end_number}).` };
+        }
+    } else if (partnerId === 1) {
+        return { success: false, error: 'No active form series found for Oriango (Partner ID 1). Please contact an administrator.' };
+    }
+    
+    const newLoanDoc = {
+      borrowerId,
+      amount,
+      interestRate,
+      issueDate: new Date().toISOString(),
+      repaymentSchedule,
+      status: 'pending',
+      repayments: [],
+      formNumber,
+      partnerId,
+      createdBy,
+      validationSource,
+    };
+
+    const result = await db.collection('loans').insertOne(newLoanDoc);
+
+    return { success: true, loanId: result.insertedId.toString() };
+  } catch (error) {
+    console.error("Failed to create loan:", error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
+
 export async function getLoanById(loanId: string): Promise<Loan | null> {
     try {
         const client = await clientPromise;
@@ -173,9 +254,6 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
             {
                 $lookup: {
                     from: "users",
-                    // Note: In the DB, borrowerId is a string, not ObjectId. This is a potential issue from original code.
-                    // Assuming borrowerId on loans collection matches the string version of a user's _id.
-                    // If borrowerId were stored as ObjectId, this would need `localField: 'borrowerId'` and `foreignField: '_id'`
                     let: { borrower_id: { $toObjectId: "$borrowerId" } },
                     pipeline: [
                         { $match: { $expr: { $eq: [ "$_id", "$$borrower_id" ] } } }
@@ -186,7 +264,7 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
             {
                 $unwind: {
                     path: "$borrowerInfo",
-                    preserveNullAndEmptyArrays: true // Keep loans even if borrower is not found
+                    preserveNullAndEmptyArrays: true
                 }
             },
             {
@@ -196,7 +274,7 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
             },
             {
                 $project: {
-                    borrowerInfo: 0 // Remove the joined borrower document
+                    borrowerInfo: 0
                 }
             }
         ]).toArray();
@@ -273,12 +351,12 @@ export async function getDashboardStats() {
         const loansCollection = db.collection('loans');
 
         const totalUsers = await usersCollection.countDocuments();
-        const allLoans = await loansCollection.find({}).toArray() as Loan[];
+        const allLoans = await loansCollection.find({}).toArray() as any[];
         
         const activeLoans = allLoans.filter(loan => calculateOutstandingBalance(loan) > 0).length;
         const totalLoaned = allLoans.reduce((acc, loan) => acc + loan.amount, 0);
         const totalPaid = allLoans.reduce(
-            (acc, loan) => acc + loan.repayments.reduce((sum, p) => sum + p.amount, 0),
+            (acc, loan) => acc + (loan.repayments?.reduce((sum, p) => sum + p.amount, 0) || 0),
             0
         );
         
@@ -286,5 +364,20 @@ export async function getDashboardStats() {
     } catch (error) {
         console.error("Failed to get dashboard stats:", error);
         return { totalUsers: 0, activeLoans: 0, totalLoaned: 0, totalPaid: 0, error: 'Could not load dashboard statistics.' };
+    }
+}
+
+
+// --- Form Series Actions ---
+
+export async function getFormSeries() {
+    try {
+        const client = await clientPromise;
+        const db = client.db("oriango");
+        const series = await db.collection('form_series_register').find({}).toArray();
+        return series.map(s => mapMongoId(s as any)) as FormSeries[];
+    } catch (error) {
+        console.error("Failed to get form series:", error);
+        return [];
     }
 }

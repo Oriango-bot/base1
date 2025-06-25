@@ -1,6 +1,8 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -15,13 +17,16 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle } from 'lucide-react';
+import { PlusCircle, Loader2 } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
+import { createLoan } from '@/app/actions';
+import type { User } from '@/lib/types';
 
 const loanSchema = z.object({
+  formNumber: z.string().min(1, { message: 'Form number is required.' }),
   amount: z.coerce.number().positive({ message: 'Amount must be positive.' }),
   interestRate: z.coerce.number().min(0).max(100, { message: 'Interest rate must be between 0 and 100.' }),
   repaymentSchedule: z.enum(['weekly', 'monthly']),
@@ -31,6 +36,17 @@ type LoanFormValues = z.infer<typeof loanSchema>;
 
 export default function CreateLoanDialog({ borrowerId }: { borrowerId: string }) {
   const [open, setOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, [open]);
+
   const {
     control,
     register,
@@ -40,19 +56,44 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
   } = useForm<LoanFormValues>({
     resolver: zodResolver(loanSchema),
     defaultValues: {
-        repaymentSchedule: 'monthly',
-    }
+      repaymentSchedule: 'monthly',
+      formNumber: '',
+    },
   });
 
-  const onSubmit = (data: LoanFormValues) => {
-    // In a real app, you would make an API call to create the loan
-    console.log('New Loan Application:', { ...data, borrowerId });
-    toast({
-      title: 'Loan Application Submitted',
-      description: `Your application for ${data.amount} is now pending review.`,
-    });
-    reset();
-    setOpen(false);
+  const onSubmit = async (data: LoanFormValues) => {
+    if (!currentUser) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to create a loan.' });
+      return;
+    }
+    setIsLoading(true);
+    
+    const formData = new FormData();
+    formData.append('formNumber', data.formNumber);
+    formData.append('amount', data.amount.toString());
+    formData.append('interestRate', data.interestRate.toString());
+    formData.append('repaymentSchedule', data.repaymentSchedule);
+    formData.append('borrowerId', borrowerId);
+    formData.append('createdBy', currentUser.id);
+
+    const result = await createLoan(formData);
+    setIsLoading(false);
+
+    if (result.success) {
+      toast({
+        title: 'Loan Application Submitted',
+        description: `The application for ${data.formNumber} is now pending review.`,
+      });
+      reset();
+      setOpen(false);
+      router.refresh(); // Refresh the page to show the new loan
+    } else {
+       toast({
+        variant: 'destructive',
+        title: 'Application Failed',
+        description: result.error || 'An unknown error occurred.',
+      });
+    }
   };
 
   return (
@@ -72,6 +113,13 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="formNumber" className="text-right">Form No.</Label>
+              <div className="col-span-3">
+                <Input id="formNumber" {...register('formNumber')} />
+                {errors.formNumber && <p className="text-destructive text-xs mt-1">{errors.formNumber.message}</p>}
+              </div>
+            </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="amount" className="text-right">Amount ($)</Label>
               <div className="col-span-3">
@@ -107,9 +155,12 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
           </div>
           <DialogFooter>
             <DialogClose asChild>
-              <Button type="button" variant="secondary">Cancel</Button>
+              <Button type="button" variant="secondary" disabled={isLoading}>Cancel</Button>
             </DialogClose>
-            <Button type="submit">Submit Application</Button>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Submit Application
+            </Button>
           </DialogFooter>
         </form>
       </DialogContent>

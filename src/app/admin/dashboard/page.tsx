@@ -6,7 +6,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/utils";
-import { Landmark, Users, Wallet, HandCoins } from "lucide-react";
+import { Landmark, Users, Wallet, HandCoins, FileKey } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { getDashboardStats } from "@/app/actions";
@@ -90,12 +90,15 @@ export default async function AdminDashboard() {
         <CardHeader>
           <CardTitle>Admin Tools</CardTitle>
         </CardHeader>
-        <CardContent className="flex gap-4">
+        <CardContent className="flex flex-wrap gap-4">
             <Button asChild>
                 <Link href="/borrowers">Manage Users</Link>
             </Button>
              <Button asChild variant="secondary">
                 <Link href="/loans">Manage Loans</Link>
+            </Button>
+            <Button asChild variant="secondary">
+                <Link href="/admin/form-series"><FileKey className="mr-2"/> Manage Form Series</Link>
             </Button>
         </CardContent>
       </Card>

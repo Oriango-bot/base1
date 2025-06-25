@@ -16,7 +16,6 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
     notFound();
   }
 
-  // The borrowerId on loan objects is a string ID.
   const user = await getUserById(loan.borrowerId);
   const outstandingBalance = calculateOutstandingBalance(loan);
   const totalPaid = loan.repayments.reduce((acc, p) => acc + p.amount, 0);
@@ -94,6 +93,14 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
             <CardTitle>Loan Terms</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4 text-sm">
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Form Number</span>
+              <span className="font-medium font-mono">{loan.formNumber}</span>
+            </div>
+             <div className="flex justify-between">
+              <span className="text-muted-foreground">Partner ID</span>
+              <span className="font-medium">{loan.partnerId}</span>
+            </div>
             <div className="flex justify-between">
               <span className="text-muted-foreground">Principal Amount</span>
               <span className="font-medium">{formatCurrency(loan.amount)}</span>
