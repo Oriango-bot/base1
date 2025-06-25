@@ -3,11 +3,12 @@
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
 import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
-import type { Loan, User, UserRole, FormSeries } from '@/lib/types';
+import type { Loan, User, UserRole, FormSeries, Repayment } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 
 // --- Utility function to map MongoDB documents ---
 function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
@@ -285,6 +286,73 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
         return [];
     }
 }
+
+export async function recordRepayment(formData: FormData) {
+  const loanId = formData.get('loanId') as string;
+  const amountStr = formData.get('amount') as string;
+
+  if (!loanId || !amountStr) {
+    return { success: false, error: 'Missing required repayment data.' };
+  }
+
+  const amount = parseFloat(amountStr);
+  if (isNaN(amount) || amount <= 0) {
+    return { success: false, error: 'Invalid repayment amount.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const loansCollection = db.collection('loans');
+
+    // Fetch the current loan document
+    const loanToUpdate = await loansCollection.findOne({ _id: new ObjectId(loanId) });
+    if (!loanToUpdate) {
+        return { success: false, error: 'Loan not found.' };
+    }
+
+    const newRepayment: Repayment = {
+        id: uuidv4(),
+        amount: amount,
+        date: new Date().toISOString()
+    };
+
+    const updatedRepayments = [...loanToUpdate.repayments, newRepayment];
+    const totalPaid = updatedRepayments.reduce((sum, p) => sum + p.amount, 0);
+    const totalOwed = loanToUpdate.amount * (1 + loanToUpdate.interestRate / 100);
+
+    // Determine the new status
+    let newStatus = loanToUpdate.status;
+    if (totalPaid >= totalOwed) {
+        newStatus = 'paid';
+    } else if (loanToUpdate.status === 'pending') {
+        newStatus = 'active';
+    }
+
+    // Prepare the update document
+    const updateDoc: any = {
+        $set: {
+            repayments: updatedRepayments,
+        }
+    };
+    if (newStatus !== loanToUpdate.status) {
+        updateDoc.$set.status = newStatus;
+    }
+
+    const result = await loansCollection.updateOne({ _id: new ObjectId(loanId) }, updateDoc);
+
+    if (result.modifiedCount === 0 && newStatus === loanToUpdate.status) {
+      // This can happen if the update doesn't change any fields, which is not an error.
+      // For instance, if no status change occurred. Let's still return success.
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to record repayment:", error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
 
 // --- AI Actions ---
 
