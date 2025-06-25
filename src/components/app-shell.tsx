@@ -28,7 +28,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
-import { SheetTitle } from './ui/sheet';
 import Footer from './footer';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
@@ -112,7 +111,6 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <Sidebar>
-         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2.5 text-primary">
             <Landmark className="h-7 w-7" />
