@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import {
@@ -21,6 +22,7 @@ import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { HandCoins, Loader2 } from 'lucide-react';
 import { recordRepayment } from '@/app/actions';
+import type { User } from '@/lib/types';
 
 const repaymentSchema = z.object({
   amount: z.coerce.number().positive({ message: 'Repayment amount must be positive.' }),
@@ -31,7 +33,15 @@ type RepaymentFormValues = z.infer<typeof repaymentSchema>;
 export default function RecordRepaymentDialog({ loanId }: { loanId: string }) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
+      setCurrentUser(JSON.parse(storedUser));
+    }
+  }, []);
 
   const {
     register,
@@ -43,11 +53,17 @@ export default function RecordRepaymentDialog({ loanId }: { loanId: string }) {
   });
 
   const onSubmit = async (data: RepaymentFormValues) => {
+    if (!currentUser) {
+      toast({ variant: 'destructive', title: 'Error', description: 'You must be logged in to record a repayment.' });
+      return;
+    }
+
     setIsLoading(true);
 
     const formData = new FormData();
     formData.append('loanId', loanId);
     formData.append('amount', data.amount.toString());
+    formData.append('recordedBy', currentUser.id);
 
     const result = await recordRepayment(formData);
     

@@ -12,12 +12,14 @@ import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
-import { ArrowRight, Wallet, Landmark, CheckCircle, Clock } from "lucide-react";
+import { ArrowRight, Wallet, Landmark, CheckCircle, Clock, PiggyBank, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { Loan, User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import LoanEligibilityCalculator from "@/components/loan-eligibility-calculator";
 import { Skeleton } from '@/components/ui/skeleton';
+import CreateLoanDialog from "@/components/create-loan-dialog";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
@@ -32,7 +34,7 @@ export default function Dashboard() {
       setIsLoading(true);
       getLoansForUser(parsedUser.id)
         .then(loans => {
-          setUserLoans(loans);
+          setUserLoans(loans.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()));
           setIsLoading(false);
         });
     } else {
@@ -58,10 +60,28 @@ export default function Dashboard() {
 
   const totalOutstanding = activeLoans.reduce((acc, loan) => acc + calculateOutstandingBalance(loan), 0);
   const totalRepaid = userLoans.reduce((acc, loan) => acc + (loan.repayments.reduce((sum, p) => sum + p.amount, 0)), 0);
+  
+  const canApply = !userLoans.some(loan => ['pending', 'approved', 'active'].includes(loan.status));
+  const activeLoanForPayment = userLoans.find(loan => loan.status === 'active');
 
   return (
     <div className="space-y-8">
-        <h1 className="text-3xl font-bold">Welcome, {user.name}!</h1>
+        <div className="flex justify-between items-start">
+            <h1 className="text-3xl font-bold">Welcome, {user.name}!</h1>
+            <CreateLoanDialog borrowerId={user.id} canApply={canApply} />
+        </div>
+      
+      {activeLoanForPayment && (
+        <Alert variant="default" className="border-primary">
+            <PiggyBank className="h-4 w-4" />
+            <AlertTitle>Loan Repayment Due</AlertTitle>
+            <AlertDescription>
+                <p>Your outstanding balance is <strong>{formatCurrency(calculateOutstandingBalance(activeLoanForPayment))}</strong>.</p>
+                <p className="mt-2 text-sm">To make a payment, use M-Pesa Paybill: <strong>12345</strong>, Account: <strong>{user.name.replace(/\s+/g, '')}</strong>.</p>
+            </AlertDescription>
+        </Alert>
+      )}
+
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -129,8 +149,16 @@ export default function Dashboard() {
                                 <TableCell className="font-medium">{formatCurrency(loan.amount)}</TableCell>
                                 <TableCell>{formatCurrency(calculateOutstandingBalance(loan))}</TableCell>
                                 <TableCell>
-                                    <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')}>
-                                        {loan.status.charAt(0).toUpperCase() + loan.status.slice(1)}
+                                    <Badge 
+                                        variant={
+                                            loan.status === 'active' ? 'destructive' : 
+                                            loan.status === 'paid' ? 'default' :
+                                            loan.status === 'rejected' ? 'destructive' :
+                                            'secondary'
+                                        }
+                                        className="capitalize"
+                                    >
+                                        {loan.status}
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right">

@@ -1,4 +1,7 @@
 
+'use client';
+
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { getLoansWithBorrowerDetails } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -13,10 +16,78 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
-import { calculateOutstandingBalance, formatCurrency, getNextDueDate } from '@/lib/utils';
+import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import type { Loan, LoanStatus } from '@/lib/types';
+import { Skeleton } from '@/components/ui/skeleton';
 
-export default async function LoansPage() {
-  const allLoans = await getLoansWithBorrowerDetails();
+type LoanWithBorrower = Loan & { borrowerName: string };
+
+export default function LoansPage() {
+  const [loans, setLoans] = useState<LoanWithBorrower[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    getLoansWithBorrowerDetails().then(data => {
+      setLoans(data);
+      setIsLoading(false);
+    });
+  }, []);
+
+  const renderLoansTable = (loanList: LoanWithBorrower[]) => {
+    if (isLoading) {
+        return (
+             <div className="space-y-2 pt-4">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+        )
+    }
+
+    if (loanList.length === 0) {
+      return <p className="text-center text-muted-foreground py-8">No loans in this category.</p>;
+    }
+
+    return (
+        <Table>
+            <TableHeader>
+                <TableRow>
+                <TableHead>Borrower</TableHead>
+                <TableHead>Form Number</TableHead>
+                <TableHead>Amount</TableHead>
+                <TableHead className="hidden md:table-cell">Outstanding</TableHead>
+                <TableHead>
+                    <span className="sr-only">Actions</span>
+                </TableHead>
+                </TableRow>
+            </TableHeader>
+            <TableBody>
+                {loanList.map((loan) => {
+                const outstanding = calculateOutstandingBalance(loan);
+                return (
+                    <TableRow key={loan.id}>
+                    <TableCell className="font-medium">{loan.borrowerName}</TableCell>
+                    <TableCell className="font-mono text-muted-foreground">{loan.formNumber}</TableCell>
+                    <TableCell>{formatCurrency(loan.amount)}</TableCell>
+                    <TableCell className="hidden md:table-cell">{formatCurrency(outstanding)}</TableCell>
+                    <TableCell className="text-right">
+                        <Button asChild variant="ghost" size="icon">
+                        <Link href={`/loans/${loan.id}`}>
+                            <ArrowRight className="h-4 w-4" />
+                            <span className="sr-only">View Details</span>
+                        </Link>
+                        </Button>
+                    </TableCell>
+                    </TableRow>
+                );
+                })}
+            </TableBody>
+        </Table>
+    );
+  };
+
+  const loanStatuses: LoanStatus[] = ['pending', 'approved', 'active', 'paid', 'rejected'];
 
   return (
     <Card>
@@ -24,46 +95,18 @@ export default async function LoansPage() {
         <CardTitle>All Loans</CardTitle>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Borrower</TableHead>
-              <TableHead>Form Number</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead className="hidden md:table-cell">Outstanding</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>
-                <span className="sr-only">Actions</span>
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {allLoans.map((loan) => {
-              const outstanding = calculateOutstandingBalance(loan);
-              return (
-                <TableRow key={loan.id}>
-                  <TableCell className="font-medium">{loan.borrowerName}</TableCell>
-                  <TableCell className="font-mono text-muted-foreground">{loan.formNumber}</TableCell>
-                  <TableCell>{formatCurrency(loan.amount)}</TableCell>
-                  <TableCell className="hidden md:table-cell">{formatCurrency(outstanding)}</TableCell>
-                  <TableCell>
-                     <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')} className="capitalize">
-                        {loan.status}
-                    </Badge>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button asChild variant="ghost" size="icon">
-                      <Link href={`/loans/${loan.id}`}>
-                        <ArrowRight className="h-4 w-4" />
-                        <span className="sr-only">View Details</span>
-                      </Link>
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <Tabs defaultValue="pending" className="w-full">
+          <TabsList className="grid w-full grid-cols-5">
+            {loanStatuses.map(status => (
+                <TabsTrigger key={status} value={status} className="capitalize">{status}</TabsTrigger>
+            ))}
+          </TabsList>
+          {loanStatuses.map(status => (
+            <TabsContent key={status} value={status}>
+                {renderLoansTable(loans.filter(loan => loan.status === status))}
+            </TabsContent>
+          ))}
+        </Tabs>
       </CardContent>
     </Card>
   );

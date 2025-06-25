@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { calculateOutstandingBalance, formatCurrency, getNextDueDate } from '@/lib/utils';
 import RecordRepaymentDialog from '@/components/record-repayment-dialog';
 import AiSummaryDialog from '@/components/ai-summary-dialog';
-import type { User, Loan } from '@/lib/types';
+import UpdateLoanStatus from '@/components/update-loan-status';
 
 export default async function LoanDetailPage({ params }: { params: { id: string } }) {
   const loan = await getLoanById(params.id);
@@ -17,6 +17,13 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
   }
 
   const user = await getUserById(loan.borrowerId);
+  const statusChangers = await Promise.all(
+    (loan.statusHistory || []).map(async (h) => {
+      const changer = await getUserById(h.changedBy);
+      return { ...h, changerName: changer?.name || 'System' };
+    })
+  );
+
   const outstandingBalance = calculateOutstandingBalance(loan);
   const totalPaid = loan.repayments.reduce((acc, p) => acc + p.amount, 0);
   const nextDueDate = getNextDueDate(loan);
@@ -49,7 +56,15 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Status</div>
-                    <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')} className="text-lg capitalize">
+                     <Badge 
+                        variant={
+                            loan.status === 'active' ? 'destructive' : 
+                            loan.status === 'paid' ? 'default' :
+                            loan.status === 'rejected' ? 'destructive' :
+                            'secondary'
+                        }
+                        className="text-lg capitalize"
+                    >
                         {loan.status}
                     </Badge>
                 </div>
@@ -87,7 +102,7 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
           </CardContent>
         </Card>
       </div>
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 space-y-8">
         <Card>
           <CardHeader>
             <CardTitle>Loan Terms</CardTitle>
@@ -122,6 +137,40 @@ export default async function LoanDetailPage({ params }: { params: { id: string 
               <span className="font-medium capitalize">{loan.repaymentSchedule}</span>
             </div>
           </CardContent>
+        </Card>
+        
+        <UpdateLoanStatus loan={loan} />
+
+        <Card>
+            <CardHeader><CardTitle>Status History</CardTitle></CardHeader>
+            <CardContent>
+                <Table>
+                    <TableHeader>
+                        <TableRow>
+                            <TableHead>Status</TableHead>
+                            <TableHead>Date</TableHead>
+                            <TableHead>By</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {statusChangers.length > 0 ? (
+                            statusChangers.map((entry, index) => (
+                                <TableRow key={index}>
+                                    <TableCell className="capitalize">{entry.status}</TableCell>
+                                    <TableCell>{new Date(entry.date).toLocaleDateString()}</TableCell>
+                                    <TableCell>{entry.changerName}</TableCell>
+                                </TableRow>
+                            ))
+                        ) : (
+                             <TableRow>
+                                <TableCell colSpan={3} className="text-center text-muted-foreground">
+                                No status history.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+            </CardContent>
         </Card>
       </div>
     </div>

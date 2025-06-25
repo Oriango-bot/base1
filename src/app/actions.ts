@@ -3,7 +3,7 @@
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
 import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
-import type { Loan, User, UserRole, FormSeries, Repayment } from '@/lib/types';
+import type { Loan, User, UserRole, FormSeries, Repayment, LoanStatus } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -273,7 +273,8 @@ export async function createLoan(formData: FormData) {
       interestRate,
       issueDate: new Date().toISOString(),
       repaymentSchedule,
-      status: 'pending',
+      status: 'pending' as LoanStatus,
+      statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
       repayments: [],
       formNumber,
       partnerId,
@@ -286,6 +287,44 @@ export async function createLoan(formData: FormData) {
     return { success: true, loanId: result.insertedId.toString() };
   } catch (error) {
     console.error("Failed to create loan:", error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
+export async function updateLoanStatus(formData: FormData) {
+  const loanId = formData.get('loanId') as string;
+  const newStatus = formData.get('newStatus') as LoanStatus;
+  const adminId = formData.get('adminId') as string;
+
+  if (!loanId || !newStatus || !adminId) {
+    return { success: false, error: 'Missing required data.' };
+  }
+  
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    
+    const newHistoryEntry = {
+        status: newStatus,
+        date: new Date().toISOString(),
+        changedBy: adminId
+    };
+
+    const result = await db.collection('loans').updateOne(
+        { _id: new ObjectId(loanId) },
+        { 
+            $set: { status: newStatus },
+            $push: { statusHistory: newHistoryEntry }
+        }
+    );
+
+    if (result.modifiedCount === 0) {
+        return { success: false, error: "Loan not found or status is already the same." };
+    }
+
+    return { success: true };
+  } catch (error) {
+    console.error("Failed to update loan status:", error);
     return { success: false, error: 'An unexpected server error occurred.' };
   }
 }
@@ -346,7 +385,7 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
                     borrowerInfo: 0
                 }
             }
-        ]).toArray();
+        ]).sort({ issueDate: -1 }).toArray();
 
         return loans.map(loan => mapMongoId(loan as any)) as (Loan & { borrowerName: string })[];
     } catch (error) {
@@ -358,8 +397,9 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
 export async function recordRepayment(formData: FormData) {
   const loanId = formData.get('loanId') as string;
   const amountStr = formData.get('amount') as string;
+  const recordedBy = formData.get('recordedBy') as string;
 
-  if (!loanId || !amountStr) {
+  if (!loanId || !amountStr || !recordedBy) {
     return { success: false, error: 'Missing required repayment data.' };
   }
 
@@ -373,7 +413,6 @@ export async function recordRepayment(formData: FormData) {
     const db = client.db("oriango");
     const loansCollection = db.collection('loans');
 
-    // Fetch the current loan document
     const loanToUpdate = await loansCollection.findOne({ _id: new ObjectId(loanId) });
     if (!loanToUpdate) {
         return { success: false, error: 'Loan not found.' };
@@ -384,20 +423,20 @@ export async function recordRepayment(formData: FormData) {
         amount: amount,
         date: new Date().toISOString()
     };
-
+    
     const updatedRepayments = [...loanToUpdate.repayments, newRepayment];
+    // @ts-ignore
+    const updatedStatusHistory = loanToUpdate.statusHistory ? [...loanToUpdate.statusHistory] : [];
     const totalPaid = updatedRepayments.reduce((sum, p) => sum + p.amount, 0);
     const totalOwed = loanToUpdate.amount * (1 + loanToUpdate.interestRate / 100);
 
-    // Determine the new status
     let newStatus = loanToUpdate.status;
     if (totalPaid >= totalOwed) {
         newStatus = 'paid';
-    } else if (loanToUpdate.status === 'pending') {
-        newStatus = 'active';
+    } else if (loanToUpdate.status !== 'active') {
+        newStatus = 'active'; // any payment on a non-paid loan makes it active
     }
 
-    // Prepare the update document
     const updateDoc: any = {
         $set: {
             repayments: updatedRepayments,
@@ -405,14 +444,17 @@ export async function recordRepayment(formData: FormData) {
     };
     if (newStatus !== loanToUpdate.status) {
         updateDoc.$set.status = newStatus;
+        const historyEntry = {
+            status: newStatus,
+            date: new Date().toISOString(),
+            changedBy: recordedBy,
+        };
+        // @ts-ignore
+        updatedStatusHistory.push(historyEntry);
+        updateDoc.$set.statusHistory = updatedStatusHistory;
     }
 
-    const result = await loansCollection.updateOne({ _id: new ObjectId(loanId) }, updateDoc);
-
-    if (result.modifiedCount === 0 && newStatus === loanToUpdate.status) {
-      // This can happen if the update doesn't change any fields, which is not an error.
-      // For instance, if no status change occurred. Let's still return success.
-    }
+    await loansCollection.updateOne({ _id: new ObjectId(loanId) }, updateDoc);
 
     return { success: true };
   } catch (error) {

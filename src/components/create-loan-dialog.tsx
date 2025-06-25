@@ -24,6 +24,7 @@ import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { createLoan } from '@/app/actions';
 import type { User } from '@/lib/types';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 
 const loanSchema = z.object({
   formNumber: z.string().min(1, { message: 'Form number is required.' }),
@@ -34,7 +35,12 @@ const loanSchema = z.object({
 
 type LoanFormValues = z.infer<typeof loanSchema>;
 
-export default function CreateLoanDialog({ borrowerId }: { borrowerId: string }) {
+interface CreateLoanDialogProps {
+    borrowerId: string;
+    canApply?: boolean;
+}
+
+export default function CreateLoanDialog({ borrowerId, canApply = true }: CreateLoanDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
@@ -96,14 +102,28 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
     }
   };
 
+  const TriggerButton = (
+    <Button disabled={!canApply}>
+      <PlusCircle className="mr-2 h-4 w-4" />
+      Apply for Loan
+    </Button>
+  );
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Apply for Loan
-        </Button>
-      </DialogTrigger>
+      <TooltipProvider>
+        <Tooltip>
+            <TooltipTrigger asChild>
+                {canApply ? <DialogTrigger asChild>{TriggerButton}</DialogTrigger> : <div>{TriggerButton}</div>}
+            </TooltipTrigger>
+            {!canApply && (
+                <TooltipContent>
+                    <p>You have an ongoing loan application. Please wait until it is resolved.</p>
+                </TooltipContent>
+            )}
+        </Tooltip>
+      </TooltipProvider>
+
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
