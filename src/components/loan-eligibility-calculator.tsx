@@ -70,7 +70,7 @@ export default function LoanEligibilityCalculator() {
               name="monthlyIncome"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Monthly Income ($)</FormLabel>
+                  <FormLabel>Monthly Income (KES)</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="5000" {...field} />
                   </FormControl>
@@ -83,7 +83,7 @@ export default function LoanEligibilityCalculator() {
               name="monthlyDebt"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Monthly Debt Payments ($)</FormLabel>
+                  <FormLabel>Monthly Debt Payments (KES)</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="1500" {...field} />
                   </FormControl>
@@ -109,7 +109,7 @@ export default function LoanEligibilityCalculator() {
               name="loanAmount"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Desired Loan Amount ($)</FormLabel>
+                  <FormLabel>Desired Loan Amount (KES)</FormLabel>
                   <FormControl>
                     <Input type="number" placeholder="10000" {...field} />
                   </FormControl>

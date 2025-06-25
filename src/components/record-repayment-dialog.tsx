@@ -93,7 +93,7 @@ export default function RecordRepaymentDialog({ loanId }: { loanId: string }) {
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="amount" className="text-right">Amount ($)</Label>
+              <Label htmlFor="amount" className="text-right">Amount (KES)</Label>
               <div className="col-span-3">
                 <Input id="amount" type="number" step="0.01" {...register('amount')} disabled={isLoading} />
                 {errors.amount && <p className="text-destructive text-xs mt-1">{errors.amount.message}</p>}

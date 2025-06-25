@@ -36,10 +36,10 @@ const prompt = ai.definePrompt({
   prompt: `You are a loan officer for a microfinance institution. Your task is to assess loan eligibility based on the provided financial data.
 
   Applicant Data:
-  - Monthly Income: \${{{monthlyIncome}}}
-  - Monthly Debt: \${{{monthlyDebt}}}
+  - Monthly Income: KES {{{monthlyIncome}}}
+  - Monthly Debt: KES {{{monthlyDebt}}}
   - Credit Score: {{{creditScore}}}
-  - Requested Loan Amount: \${{{loanAmount}}}
+  - Requested Loan Amount: KES {{{loanAmount}}}
 
   Your assessment criteria:
   1.  **Debt-to-Income Ratio (DTI):** (monthlyDebt / monthlyIncome). If DTI > 0.5, the applicant is generally not eligible.
