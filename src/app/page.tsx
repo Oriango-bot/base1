@@ -37,7 +37,7 @@ export default function HomePage() {
                   User Login
                 </Link>
                 <Link
-                  href="/login"
+                  href="/admin/login"
                   className="hover:text-primary transition-colors"
                 >
                   Admin Login

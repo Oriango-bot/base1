@@ -9,13 +9,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { loginUser } from '@/app/actions';
 import Footer from '@/components/footer';
 
 
-export default function LoginPage() {
+export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -36,19 +36,24 @@ export default function LoginPage() {
         description: error || 'An unknown error occurred.',
       });
     } else {
-      if (user.role !== 'user') {
+      if (user.role !== 'admin' && user.role !== 'super-admin') {
         toast({
           variant: 'destructive',
           title: 'Access Denied',
-          description: 'This login page is for users only. Please use the admin login page.',
+          description: 'You do not have administrative privileges.',
         });
         localStorage.removeItem('loggedInUser');
         return;
       }
-
-      toast({ title: 'Login Successful', description: `Welcome back, ${user.name}!` });
+      
+      toast({ title: 'Admin Login Successful', description: `Welcome back, ${user.name}!` });
       localStorage.setItem('loggedInUser', JSON.stringify(user));
-      router.push('/dashboard');
+
+      if (user.role === 'super-admin') {
+        router.push('/super-admin/dashboard');
+      } else {
+        router.push('/admin/dashboard');
+      }
     }
   };
 
@@ -58,11 +63,11 @@ export default function LoginPage() {
             <Card className="w-full max-w-md mx-4">
             <CardHeader className="text-center">
                 <div className="flex justify-center items-center gap-2 mb-4">
-                    <TrendingUp className="h-8 w-8 text-primary" />
+                    <ShieldCheck className="h-8 w-8 text-primary" />
                     <h1 className="text-2xl font-bold">Oriango</h1>
                 </div>
-                <CardTitle className="text-2xl">User Login</CardTitle>
-                <CardDescription>Enter your credentials to access your account</CardDescription>
+                <CardTitle className="text-2xl">Admin Login</CardTitle>
+                <CardDescription>Enter your admin credentials to access the dashboard</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -72,7 +77,7 @@ export default function LoginPage() {
                     id="email"
                     name="email"
                     type="email"
-                    placeholder="m@example.com"
+                    placeholder="admin@example.com"
                     required
                     disabled={isLoading}
                 />
@@ -89,13 +94,13 @@ export default function LoginPage() {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login
+                Login as Admin
                 </Button>
             </form>
             <div className="mt-4 text-center text-sm">
-                Don&apos;t have an account?{' '}
-                <Link href="/signup" className="underline">
-                Sign up
+                Are you a regular user?{' '}
+                <Link href="/login" className="underline">
+                User Login
                 </Link>
             </div>
             </CardContent>
