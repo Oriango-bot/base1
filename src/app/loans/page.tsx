@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { borrowers, loans } from '@/lib/data';
+import { users, loans } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -16,8 +16,8 @@ import { calculateOutstandingBalance, formatCurrency, getNextDueDate } from '@/l
 
 export default function LoansPage() {
   const allLoans = loans.map(loan => {
-    const borrower = borrowers.find(b => b.id === loan.borrowerId);
-    return { ...loan, borrowerName: borrower?.name || 'Unknown' };
+    const user = users.find(b => b.id === loan.borrowerId);
+    return { ...loan, borrowerName: user?.name || 'Unknown' };
   });
 
   return (
@@ -49,8 +49,8 @@ export default function LoansPage() {
                   <TableCell>{formatCurrency(loan.amount)}</TableCell>
                   <TableCell className="hidden md:table-cell">{formatCurrency(outstanding)}</TableCell>
                   <TableCell>
-                    <Badge variant={outstanding > 0 ? 'destructive' : 'default'}>
-                      {outstanding > 0 ? 'Active' : 'Paid'}
+                     <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')} className="capitalize">
+                        {loan.status}
                     </Badge>
                   </TableCell>
                   <TableCell className="hidden sm:table-cell text-muted-foreground">

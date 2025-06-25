@@ -1,6 +1,7 @@
 'use server';
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
+import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
 import type { Loan } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 
@@ -35,5 +36,15 @@ export async function getAiSummary(loan: Loan) {
   } catch (error) {
     console.error('Error getting AI summary:', error);
     return { summary: null, error: 'Failed to generate summary. Please try again.' };
+  }
+}
+
+export async function checkLoanEligibility(input: LoanEligibilityInput) {
+  try {
+    const result = await calculateLoanEligibility(input);
+    return { data: result, error: null };
+  } catch (error) {
+    console.error('Error checking loan eligibility:', error);
+    return { data: null, error: 'Failed to check eligibility. Please try again.' };
   }
 }

@@ -13,10 +13,10 @@ export default function HomePage() {
         </Link>
         <nav className="ml-auto flex gap-2">
           <Button variant="ghost" asChild>
-              <Link href="/dashboard">Login</Link>
+              <Link href="/login">Login</Link>
           </Button>
           <Button asChild>
-              <Link href="/dashboard">Get Started</Link>
+              <Link href="/signup">Sign Up</Link>
           </Button>
         </nav>
       </header>
@@ -69,8 +69,8 @@ export default function HomePage() {
                        <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
                             <Users className="h-6 w-6 text-primary-foreground" />
                         </div>
-                        <h3 className="text-lg font-bold">Borrower Management</h3>
-                        <p className="text-sm text-muted-foreground">Keep track of all your borrowers, their profiles, and loan histories in one place.</p>
+                        <h3 className="text-lg font-bold">User Management</h3>
+                        <p className="text-sm text-muted-foreground">Keep track of all your users, their profiles, and loan histories in one place.</p>
                     </div>
                      <div className="grid gap-2 text-center">
                        <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">

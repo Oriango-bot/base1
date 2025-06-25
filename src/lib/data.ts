@@ -1,33 +1,48 @@
-import type { Borrower, Loan } from './types';
+import type { User, Loan } from './types';
 
-export const borrowers: Borrower[] = [
+export let users: User[] = [
   {
-    id: 'bor_1',
+    id: 'user_1',
+    name: 'Super Admin',
+    email: 'super@oriango.com',
+    phone: '555-0001',
+    address: '1 Admin Way, Springfield',
+    joinDate: '2023-01-01',
+    role: 'super-admin',
+  },
+  {
+    id: 'user_2',
+    name: 'Normal Admin',
+    email: 'admin@oriango.com',
+    phone: '555-0002',
+    address: '2 Admin Way, Springfield',
+    joinDate: '2023-01-02',
+    role: 'admin',
+  },
+  {
+    id: 'user_3',
     name: 'Alice Johnson',
+    email: 'alice@oriango.com',
     phone: '555-0101',
     address: '123 Maple St, Springfield',
     joinDate: '2023-01-15',
+    role: 'user',
   },
   {
-    id: 'bor_2',
+    id: 'user_4',
     name: 'Bob Williams',
+    email: 'bob@oriango.com',
     phone: '555-0102',
     address: '456 Oak Ave, Springfield',
     joinDate: '2023-02-20',
-  },
-  {
-    id: 'bor_3',
-    name: 'Charlie Brown',
-    phone: '555-0103',
-    address: '789 Pine Ln, Springfield',
-    joinDate: '2023-03-10',
+    role: 'user',
   },
 ];
 
-export const loans: Loan[] = [
+export let loans: Loan[] = [
   {
     id: 'loan_1',
-    borrowerId: 'bor_1',
+    borrowerId: 'user_3',
     amount: 500,
     interestRate: 5,
     issueDate: '2023-05-01',
@@ -40,7 +55,7 @@ export const loans: Loan[] = [
   },
   {
     id: 'loan_2',
-    borrowerId: 'bor_2',
+    borrowerId: 'user_4',
     amount: 1000,
     interestRate: 7,
     issueDate: '2023-04-15',
@@ -54,7 +69,7 @@ export const loans: Loan[] = [
   },
   {
     id: 'loan_3',
-    borrowerId: 'bor_1',
+    borrowerId: 'user_3',
     amount: 250,
     interestRate: 10,
     issueDate: '2023-08-10',
@@ -63,5 +78,15 @@ export const loans: Loan[] = [
     repayments: [
         {id: 'rep_6', amount: 275, date: '2023-09-10' }
     ],
+  },
+  {
+    id: 'loan_4',
+    borrowerId: 'user_4',
+    amount: 1500,
+    interestRate: 8,
+    issueDate: '2024-03-01',
+    repaymentSchedule: 'monthly',
+    status: 'pending',
+    repayments: [],
   },
 ];

@@ -45,10 +45,11 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
   });
 
   const onSubmit = (data: LoanFormValues) => {
-    console.log('New Loan:', { ...data, borrowerId });
+    // In a real app, you would make an API call to create the loan
+    console.log('New Loan Application:', { ...data, borrowerId });
     toast({
-      title: 'Loan Created',
-      description: `A new loan for ${data.amount} has been created.`,
+      title: 'Loan Application Submitted',
+      description: `Your application for ${data.amount} is now pending review.`,
     });
     reset();
     setOpen(false);
@@ -59,13 +60,13 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Create Loan
+          Apply for Loan
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Create New Loan</DialogTitle>
+            <DialogTitle>New Loan Application</DialogTitle>
             <DialogDescription>
               Enter the details for the new loan.
             </DialogDescription>
@@ -108,7 +109,7 @@ export default function CreateLoanDialog({ borrowerId }: { borrowerId: string })
             <DialogClose asChild>
               <Button type="button" variant="secondary">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save Loan</Button>
+            <Button type="submit">Submit Application</Button>
           </DialogFooter>
         </form>
       </DialogContent>

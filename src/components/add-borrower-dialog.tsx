@@ -20,29 +20,31 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 
-const borrowerSchema = z.object({
+const userSchema = z.object({
   name: z.string().min(2, { message: 'Name must be at least 2 characters.' }),
+  email: z.string().email({ message: 'Please enter a valid email.' }),
   phone: z.string().min(10, { message: 'Please enter a valid phone number.' }),
   address: z.string().min(5, { message: 'Please enter a valid address.' }),
 });
 
-type BorrowerFormValues = z.infer<typeof borrowerSchema>;
+type UserFormValues = z.infer<typeof userSchema>;
 
-export default function AddBorrowerDialog() {
+export default function AddUserDialog() {
   const [open, setOpen] = useState(false);
   const {
     register,
     handleSubmit,
     formState: { errors },
     reset,
-  } = useForm<BorrowerFormValues>({
-    resolver: zodResolver(borrowerSchema),
+  } = useForm<UserFormValues>({
+    resolver: zodResolver(userSchema),
   });
 
-  const onSubmit = (data: BorrowerFormValues) => {
-    console.log('New Borrower:', data);
+  const onSubmit = (data: UserFormValues) => {
+    // In a real app, this would be an API call
+    console.log('New User:', data);
     toast({
-      title: "Borrower Added",
+      title: "User Added",
       description: `${data.name} has been successfully added.`,
     });
     reset();
@@ -54,15 +56,15 @@ export default function AddBorrowerDialog() {
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Add Borrower
+          Add User
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit(onSubmit)}>
           <DialogHeader>
-            <DialogTitle>Add New Borrower</DialogTitle>
+            <DialogTitle>Add New User</DialogTitle>
             <DialogDescription>
-              Enter the details of the new borrower. Click save when you're done.
+              Enter the details of the new user. Click save when you're done.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -73,6 +75,15 @@ export default function AddBorrowerDialog() {
               <div className="col-span-3">
                 <Input id="name" {...register('name')} />
                 {errors.name && <p className="text-destructive text-xs mt-1">{errors.name.message}</p>}
+              </div>
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="email" className="text-right">
+                Email
+              </Label>
+              <div className="col-span-3">
+                <Input id="email" {...register('email')} />
+                {errors.email && <p className="text-destructive text-xs mt-1">{errors.email.message}</p>}
               </div>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -98,7 +109,7 @@ export default function AddBorrowerDialog() {
             <DialogClose asChild>
                 <Button type="button" variant="secondary">Cancel</Button>
             </DialogClose>
-            <Button type="submit">Save Borrower</Button>
+            <Button type="submit">Save User</Button>
           </DialogFooter>
         </form>
       </DialogContent>

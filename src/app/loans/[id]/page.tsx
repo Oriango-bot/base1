@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { borrowers, loans } from '@/lib/data';
+import { users, loans } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +14,7 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
     notFound();
   }
 
-  const borrower = borrowers.find((b) => b.id === loan.borrowerId);
+  const user = users.find((b) => b.id === loan.borrowerId);
   const outstandingBalance = calculateOutstandingBalance(loan);
   const totalPaid = loan.repayments.reduce((acc, p) => acc + p.amount, 0);
   const nextDueDate = getNextDueDate(loan);
@@ -27,7 +27,7 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
             <div>
               <CardTitle>Loan Details</CardTitle>
               <CardDescription>
-                For <Link href={`/borrowers/${borrower?.id}`} className="text-primary hover:underline">{borrower?.name}</Link>
+                For <Link href={`/users/${user?.id}`} className="text-primary hover:underline">{user?.name}</Link>
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -47,8 +47,8 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
                     <div className="text-sm text-muted-foreground">Status</div>
-                    <Badge variant={outstandingBalance > 0 ? 'destructive' : 'default'} className="text-lg">
-                        {outstandingBalance > 0 ? 'Active' : 'Paid'}
+                    <Badge variant={loan.status === 'active' ? 'destructive' : (loan.status === 'paid' ? 'default' : 'secondary')} className="text-lg capitalize">
+                        {loan.status}
                     </Badge>
                 </div>
                 <div className="p-4 bg-muted rounded-lg">
