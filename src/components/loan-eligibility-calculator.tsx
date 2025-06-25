@@ -7,13 +7,19 @@ import { z } from 'zod';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { LoanEligibilityInputSchema, type LoanEligibilityOutput } from '@/ai/flows/loan-eligibility-flow';
+import { type LoanEligibilityOutput } from '@/ai/flows/loan-eligibility-flow';
 import { checkLoanEligibility } from '@/app/actions';
 import { Loader2, Sparkles, CheckCircle, XCircle } from 'lucide-react';
 import { formatCurrency } from '@/lib/utils';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
+
+const LoanEligibilityInputSchema = z.object({
+  monthlyIncome: z.coerce.number().positive({ message: "Monthly income must be positive." }),
+  monthlyDebt: z.coerce.number().nonnegative({ message: "Monthly debt cannot be negative." }),
+  creditScore: z.coerce.number().min(300, { message: "Credit score must be at least 300." }).max(850, { message: "Credit score cannot exceed 850." }),
+  loanAmount: z.coerce.number().positive({ message: "Loan amount must be positive." }),
+});
 
 type EligibilityFormValues = z.infer<typeof LoanEligibilityInputSchema>;
 

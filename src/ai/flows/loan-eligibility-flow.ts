@@ -10,7 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const LoanEligibilityInputSchema = z.object({
+const LoanEligibilityInputSchema = z.object({
   monthlyIncome: z.number().positive().describe('The applicant\'s total monthly income.'),
   monthlyDebt: z.number().nonnegative().describe('The applicant\'s total monthly debt payments (e.g., rent, other loans).'),
   creditScore: z.number().min(300).max(850).describe('The applicant\'s credit score.'),
@@ -18,7 +18,7 @@ export const LoanEligibilityInputSchema = z.object({
 });
 export type LoanEligibilityInput = z.infer<typeof LoanEligibilityInputSchema>;
 
-export const LoanEligibilityOutputSchema = z.object({
+const LoanEligibilityOutputSchema = z.object({
   isEligible: z.boolean().describe('Whether the applicant is eligible for the loan.'),
   maxLoanAmount: z.number().describe('The maximum loan amount the applicant is eligible for.'),
   reasoning: z.string().describe('A brief explanation for the decision.'),
