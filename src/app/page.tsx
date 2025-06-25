@@ -8,6 +8,7 @@ import {
   Sheet,
   SheetContent,
   SheetTrigger,
+  SheetTitle,
 } from "@/components/ui/sheet";
 
 export default function HomePage() {
@@ -27,6 +28,7 @@ export default function HomePage() {
               </Button>
             </SheetTrigger>
             <SheetContent side="right">
+              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
               <nav className="grid gap-6 text-lg font-medium mt-6">
                 <Link
                   href="/login"
