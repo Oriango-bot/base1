@@ -51,7 +51,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
       }
     }
     setLoading(false);
-  }, [pathname, router, publicPages]);
+  }, [pathname, router]);
 
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
