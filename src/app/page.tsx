@@ -2,8 +2,13 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, FileText, FileSearch, Wallet } from 'lucide-react';
+import { TrendingUp, FileText, FileSearch, Wallet, Menu } from 'lucide-react';
 import Footer from '@/components/footer';
+import {
+  Sheet,
+  SheetContent,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 export default function HomePage() {
   return (
@@ -13,13 +18,49 @@ export default function HomePage() {
           <TrendingUp className="h-6 w-6 text-primary" />
           <span className="font-semibold">Oriango</span>
         </Link>
-        <nav className="ml-auto flex gap-2">
-          <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-              <Link href="/signup">Sign Up</Link>
-          </Button>
+        <nav className="ml-auto flex">
+          <Sheet>
+            <SheetTrigger asChild>
+              <Button variant="outline" size="icon" className="shrink-0">
+                <Menu className="h-5 w-5" />
+                <span className="sr-only">Toggle navigation menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right">
+              <nav className="grid gap-6 text-lg font-medium mt-6">
+                <Link
+                  href="/login"
+                  className="hover:text-primary transition-colors"
+                >
+                  User Login
+                </Link>
+                <Link
+                  href="/login"
+                  className="hover:text-primary transition-colors"
+                >
+                  Admin Login
+                </Link>
+                <Link
+                  href="/#about"
+                  className="hover:text-primary transition-colors"
+                >
+                  About Us
+                </Link>
+                <Link
+                  href="/#how-it-works"
+                  className="hover:text-primary transition-colors"
+                >
+                  How to Apply
+                </Link>
+                 <Link
+                  href="/signup"
+                  className="hover:text-primary transition-colors"
+                >
+                  Sign Up
+                </Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </nav>
       </header>
       <main className="flex-1">
@@ -59,8 +100,21 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        <section id="about" className="w-full py-12 md:py-24 lg:py-32 bg-card">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-3">
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">About Oriango</h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  Oriango is dedicated to providing financial empowerment through accessible and transparent micro-finance solutions. We believe in supporting local entrepreneurs and individuals to achieve their goals and build a better future. Our mission is to foster economic growth from the ground up, with a focus on community, trust, and support.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
         
-        <section className="w-full py-12 md:py-24 lg:py-32 bg-card">
+        <section id="how-it-works" className="w-full py-12 md:py-24 lg:py-32 bg-background">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-3">
