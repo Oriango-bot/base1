@@ -40,7 +40,7 @@ export default function HomePage() {
                   href="/admin/login"
                   className="hover:text-primary transition-colors"
                 >
-                  Admin Login
+                  Admin Portal
                 </Link>
                 <Link
                   href="/about"

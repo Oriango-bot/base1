@@ -66,8 +66,8 @@ export default function AdminLoginPage() {
                     <ShieldCheck className="h-8 w-8 text-primary" />
                     <h1 className="text-2xl font-bold">Oriango</h1>
                 </div>
-                <CardTitle className="text-2xl">Admin Login</CardTitle>
-                <CardDescription>Enter your admin credentials to access the dashboard</CardDescription>
+                <CardTitle className="text-2xl">Admin Portal</CardTitle>
+                <CardDescription>Enter your credentials to access the management portal.</CardDescription>
             </CardHeader>
             <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -94,7 +94,7 @@ export default function AdminLoginPage() {
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Login as Admin
+                Login
                 </Button>
             </form>
             <div className="mt-4 text-center text-sm">
