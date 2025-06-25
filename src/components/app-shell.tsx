@@ -37,7 +37,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/about'];
+  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/admin/signup', '/about'];
 
   useEffect(() => {
     setLoading(true);
@@ -46,8 +46,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
       setUser(JSON.parse(storedUser));
     } else {
       setUser(null);
-      if (!publicPages.includes(pathname)) {
-        router.push('/login');
+      if (!publicPages.includes(pathname) && !pathname.startsWith('/admin/signup')) { // Keep this logic for now to avoid loops, signup page has its own logic
+        // But the main fix is in publicPages array
+        if (!publicPages.some(p => pathname.startsWith(p) && p !== '/')) {
+             if(pathname === '/') return;
+             router.push('/login');
+        }
       }
     }
     setLoading(false);
