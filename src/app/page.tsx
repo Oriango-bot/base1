@@ -43,7 +43,7 @@ export default function HomePage() {
                   Admin Login
                 </Link>
                 <Link
-                  href="/#about"
+                  href="/about"
                   className="hover:text-primary transition-colors"
                 >
                   About Us
