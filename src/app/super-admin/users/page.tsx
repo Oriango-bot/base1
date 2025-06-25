@@ -11,13 +11,33 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { users as initialUsers } from '@/lib/data';
 import type { User, UserRole } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
+import { updateUserRole } from '@/app/actions';
+
+async function getUsers(): Promise<User[]> {
+    'use server';
+    const { default: clientPromise } = await import('@/lib/mongodb');
+    const client = await clientPromise;
+    const db = client.db('oriango');
+    const users = await db.collection('users').find({}).toArray();
+    return users.map(user => ({
+        ...user,
+        id: user._id.toString(),
+        // Make sure all required fields are present
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        address: user.address || '',
+        joinDate: user.joinDate || '',
+        role: user.role || 'user',
+    })) as User[];
+}
+
 
 export default function ManageUsersPage() {
-  const [users, setUsers] = useState<User[]>(initialUsers);
+  const [users, setUsers] = useState<User[]>([]);
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -26,9 +46,10 @@ export default function ManageUsersPage() {
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
+    getUsers().then(setUsers);
   }, []);
 
-  const handleRoleChange = (userId: string, newRole: UserRole) => {
+  const handleRoleChange = async (userId: string, newRole: UserRole) => {
     if (currentUser?.id === userId) {
         toast({
             variant: 'destructive',
@@ -48,15 +69,25 @@ export default function ManageUsersPage() {
         return;
     }
 
-    setUsers(currentUsers =>
-      currentUsers.map(user =>
-        user.id === userId ? { ...user, role: newRole } : user
-      )
-    );
-    toast({
-      title: 'Role Updated',
-      description: `User's role has been changed to ${newRole}.`,
-    });
+    const result = await updateUserRole(userId, newRole);
+
+    if (result.success) {
+      setUsers(currentUsers =>
+        currentUsers.map(user =>
+          user.id === userId ? { ...user, role: newRole } : user
+        )
+      );
+      toast({
+        title: 'Role Updated',
+        description: `User's role has been changed to ${newRole}.`,
+      });
+    } else {
+       toast({
+        variant: 'destructive',
+        title: "Update Failed",
+        description: result.error || "Could not update user's role.",
+      });
+    }
   };
 
   if (currentUser?.role !== 'super-admin') {

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState } from 'react';
@@ -7,28 +6,76 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { users } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { TrendingUp } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+
+// This is a placeholder for a server action.
+// In a real app, this would be in a separate actions file.
+async function loginUser(data: FormData): Promise<{ user: any; error: string | null }> {
+  'use server';
+  const bcrypt = require('bcryptjs');
+  const { default: clientPromise } = await import('@/lib/mongodb');
+  
+  const email = data.get('email') as string;
+  const password = data.get('password') as string;
+
+  if (!email || !password) {
+    return { user: null, error: 'Email and password are required.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db('oriango');
+    const user = await db.collection('users').findOne({ email });
+
+    if (!user) {
+      return { user: null, error: 'Invalid email or password.' };
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+
+    if (!isPasswordValid) {
+      return { user: null, error: 'Invalid email or password.' };
+    }
+    
+    // Don't send password hash to client
+    const { password: _, ...userWithoutPassword } = user;
+    const finalUser = { ...userWithoutPassword, id: user._id.toString() };
+
+    return { user: finalUser, error: null };
+  } catch (e) {
+    console.error(e);
+    return { user: null, error: 'An unexpected error occurred.' };
+  }
+}
+
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const user = users.find((u) => u.email === email);
+    setIsLoading(true);
 
-    if (user) {
-      // In a real app, you'd verify the password hash
+    const formData = new FormData(e.currentTarget);
+    const { user, error } = await loginUser(formData);
+    
+    setIsLoading(false);
+
+    if (error || !user) {
+      toast({
+        variant: 'destructive',
+        title: 'Login Failed',
+        description: error || 'An unknown error occurred.',
+      });
+    } else {
       toast({ title: 'Login Successful', description: `Welcome back, ${user.name}!` });
-      // Simulate session by storing user info in localStorage
       localStorage.setItem('loggedInUser', JSON.stringify(user));
 
-      // Redirect based on role
       switch (user.role) {
         case 'super-admin':
           router.push('/super-admin/dashboard');
@@ -39,12 +86,6 @@ export default function LoginPage() {
         default:
           router.push('/dashboard');
       }
-    } else {
-      toast({
-        variant: 'destructive',
-        title: 'Login Failed',
-        description: 'Invalid email or password.',
-      });
     }
   };
 
@@ -65,24 +106,25 @@ export default function LoginPage() {
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
+                name="email"
                 type="email"
                 placeholder="m@example.com"
                 required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input 
                 id="password" 
+                name="password"
                 type="password" 
                 required 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
               />
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
           </form>

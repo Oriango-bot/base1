@@ -24,7 +24,7 @@ export default function AiSummaryDialog({ loan }: { loan: Loan }) {
   const handleGenerateSummary = async () => {
     setIsLoading(true);
     setError('');
-    const result = await getAiSummary(loan);
+    const result = await getAiSummary(loan.id);
     setIsLoading(false);
     
     if (result.summary) {

@@ -4,6 +4,7 @@ export type User = {
   id: string;
   name: string;
   email: string;
+  password?: string; // Hashed password, optional on fetch
   phone: string;
   address: string;
   joinDate: string;

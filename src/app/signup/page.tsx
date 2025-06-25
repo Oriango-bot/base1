@@ -6,55 +6,87 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { users } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
-import { v4 as uuidv4 } from 'uuid';
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
+import { Loader2, TrendingUp } from 'lucide-react';
 import type { User, UserRole } from '@/lib/types';
 
-export default function SignupPage() {
-  const router = useRouter();
-  const { toast } = useToast();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
+// This is a placeholder for a server action.
+// In a real app, this would be in a separate actions file.
+async function signupUser(data: FormData): Promise<{ user: any; error: string | null }> {
+  'use server';
+  const bcrypt = require('bcryptjs');
+  const { default: clientPromise } = await import('@/lib/mongodb');
+  
+  const name = data.get('name') as string;
+  const email = data.get('email') as string;
+  const password = data.get('password') as string;
+  const phone = data.get('phone') as string;
+  const address = data.get('address') as string;
 
-  const handleSignup = (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    if (users.find((u) => u.email === email)) {
-      toast({
-        variant: 'destructive',
-        title: 'Signup Failed',
-        description: 'An account with this email already exists.',
-      });
-      return;
+  if (!name || !email || !password || !phone || !address) {
+    return { user: null, error: 'All fields are required.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db('oriango');
+    const usersCollection = db.collection('users');
+
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return { user: null, error: 'An account with this email already exists.' };
     }
 
-    // Determine role: first user is super-admin, others are users
-    const isSuperAdminPresent = users.some(u => u.role === 'super-admin');
+    const isSuperAdminPresent = await usersCollection.findOne({ role: 'super-admin' });
     const role: UserRole = isSuperAdminPresent ? 'user' : 'super-admin';
 
-    const newUser: User = {
-      id: uuidv4(),
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const newUser: Omit<User, 'id'> = {
       name,
       email,
+      password: hashedPassword,
       phone,
       address,
       role,
       joinDate: new Date().toISOString(),
     };
-    
-    // In a real app, this would be an API call to your backend
-    users.push(newUser);
 
-    toast({ title: 'Signup Successful', description: `Welcome, ${name}! Please log in.` });
+    const result = await usersCollection.insertOne(newUser);
     
-    // Redirect to login page after successful signup
-    router.push('/login');
+    return { user: { id: result.insertedId.toString(), ...newUser }, error: null };
+  } catch (e) {
+    console.error(e);
+    return { user: null, error: 'An unexpected error occurred during signup.' };
+  }
+}
+
+export default function SignupPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [isLoading, setIsLoading] = useState(false);
+
+
+  const handleSignup = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    const formData = new FormData(e.currentTarget);
+    const { user, error } = await signupUser(formData);
+    
+    setIsLoading(false);
+
+    if (error || !user) {
+       toast({
+        variant: 'destructive',
+        title: 'Signup Failed',
+        description: error || 'An unknown error occurred.',
+      });
+    } else {
+       toast({ title: 'Signup Successful', description: `Welcome, ${user.name}! Please log in.` });
+       router.push('/login');
+    }
   };
 
   return (
@@ -72,25 +104,26 @@ export default function SignupPage() {
           <form onSubmit={handleSignup} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="name">Full Name</Label>
-              <Input id="name" required value={name} onChange={(e) => setName(e.target.value)} />
+              <Input id="name" name="name" required disabled={isLoading}/>
             </div>
              <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
+              <Input id="email" name="email" type="email" placeholder="m@example.com" required disabled={isLoading}/>
             </div>
              <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
+              <Input id="password" name="password" type="password" required disabled={isLoading}/>
             </div>
              <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" required value={phone} onChange={(e) => setPhone(e.target.value)} />
+              <Input id="phone" name="phone" type="tel" required disabled={isLoading}/>
             </div>
             <div className="space-y-2">
               <Label htmlFor="address">Address</Label>
-              <Input id="address" required value={address} onChange={(e) => setAddress(e.target.value)} />
+              <Input id="address" name="address" required disabled={isLoading}/>
             </div>
-            <Button type="submit" className="w-full">
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Sign Up
             </Button>
           </form>
