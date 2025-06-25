@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { ShieldCheck } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
-import { loginUser } from '@/app/actions';
+import { loginUser, isSuperAdminPresent } from '@/app/actions';
 import Footer from '@/components/footer';
 
 
@@ -19,6 +19,15 @@ export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [showSignupLink, setShowSignupLink] = useState(false);
+
+  useEffect(() => {
+    const checkSuperAdmin = async () => {
+      const present = await isSuperAdminPresent();
+      setShowSignupLink(!present);
+    };
+    checkSuperAdmin();
+  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -103,6 +112,14 @@ export default function AdminLoginPage() {
                 User Login
                 </Link>
             </div>
+            {showSignupLink && (
+                <div className="mt-4 text-center text-sm text-primary">
+                    No Super Admin account found.{' '}
+                    <Link href="/signup" className="underline font-bold">
+                        Create the first account now.
+                    </Link>
+                </div>
+            )}
             </CardContent>
         </Card>
       </main>

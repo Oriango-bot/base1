@@ -18,6 +18,20 @@ function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id:
 
 // --- User Actions ---
 
+export async function isSuperAdminPresent(): Promise<boolean> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const usersCollection = db.collection('users');
+    const superAdmin = await usersCollection.findOne({ role: 'super-admin' });
+    return !!superAdmin;
+  } catch (error) {
+    console.error("Failed to check for super admin:", error);
+    // On error, assume one might exist to prevent creating multiple.
+    return true;
+  }
+}
+
 export async function getUsers(): Promise<User[]> {
   try {
     const client = await clientPromise;
