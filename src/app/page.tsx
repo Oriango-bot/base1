@@ -1,94 +1,102 @@
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { borrowers, loans } from "@/lib/data";
-import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
-import { Landmark, Users, Wallet } from "lucide-react";
+import Link from 'next/link';
+import Image from 'next/image';
+import { Button } from '@/components/ui/button';
+import { TrendingUp, Users, CheckCircle } from 'lucide-react';
 
-export default function Dashboard() {
-  const totalBorrowers = borrowers.length;
-  const activeLoans = loans.filter(
-    (loan) => calculateOutstandingBalance(loan) > 0
-  ).length;
-  const totalLoaned = loans.reduce((acc, loan) => acc + loan.amount, 0);
-  const totalPaid = loans.reduce(
-    (acc, loan) =>
-      acc + loan.repayments.reduce((sum, p) => sum + p.amount, 0),
-    0
-  );
-
+export default function HomePage() {
   return (
-    <div className="space-y-8">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Borrowers
-            </CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{totalBorrowers}</div>
-            <p className="text-xs text-muted-foreground">
-              All registered borrowers
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Active Loans</CardTitle>
-            <Landmark className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{activeLoans}</div>
-            <p className="text-xs text-muted-foreground">
-              Loans with outstanding balance
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Amount Loaned
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalLoaned)}</div>
-            <p className="text-xs text-muted-foreground">
-              Sum of all initial loan amounts
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">
-              Total Repaid
-            </CardTitle>
-            <Wallet className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(totalPaid)}</div>
-            <p className="text-xs text-muted-foreground">
-              Across all loans
-            </p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Welcome to Oriango MicroFinance</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">
-            Use the navigation on the left to manage borrowers and their loans. You can add new borrowers, create loans, record repayments, and view detailed loan statuses. This dashboard provides a quick overview of your lending activities.
-          </p>
-        </CardContent>
-      </Card>
+    <div className="flex flex-col min-h-dvh bg-background">
+      <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
+        <Link href="/" className="flex items-center justify-center gap-2">
+          <TrendingUp className="h-6 w-6 text-primary" />
+          <span className="font-semibold">Oriango</span>
+        </Link>
+        <nav className="ml-auto flex gap-2">
+          <Button variant="ghost" asChild>
+              <Link href="/dashboard">Login</Link>
+          </Button>
+          <Button asChild>
+              <Link href="/dashboard">Get Started</Link>
+          </Button>
+        </nav>
+      </header>
+      <main className="flex-1">
+        <section className="w-full py-12 md:py-24 lg:py-32">
+          <div className="container px-4 md:px-6">
+            <div className="grid gap-6 lg:grid-cols-2 lg:gap-12 xl:gap-24">
+              <div className="flex flex-col justify-center space-y-4">
+                <div className="space-y-4">
+                  <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
+                    Simple, Clear Micro-Finance Management
+                  </h1>
+                  <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                    Oriango helps you manage loans, borrowers, and repayments with ease. Get a clear view of your micro-finance operations and empower your community.
+                  </p>
+                </div>
+                <div className="flex flex-col gap-2 min-[400px]:flex-row">
+                  <Button asChild size="lg">
+                    <Link href="/dashboard">
+                      Go to Dashboard
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+              <Image
+                src="https://placehold.co/600x400.png"
+                width="600"
+                height="400"
+                alt="Hero"
+                className="mx-auto aspect-video overflow-hidden rounded-xl object-cover sm:w-full"
+                data-ai-hint="finance community"
+              />
+            </div>
+          </div>
+        </section>
+        
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-card">
+            <div className="container px-4 md:px-6">
+                <div className="flex flex-col items-center justify-center space-y-4 text-center">
+                    <div className="space-y-3">
+                        <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Key Features</div>
+                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Features to Empower Your Work</h2>
+                        <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                            Everything you need to run a successful micro-lending service.
+                        </p>
+                    </div>
+                </div>
+                <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-12">
+                    <div className="grid gap-2 text-center">
+                       <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
+                            <Users className="h-6 w-6 text-primary-foreground" />
+                        </div>
+                        <h3 className="text-lg font-bold">Borrower Management</h3>
+                        <p className="text-sm text-muted-foreground">Keep track of all your borrowers, their profiles, and loan histories in one place.</p>
+                    </div>
+                     <div className="grid gap-2 text-center">
+                       <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
+                            <TrendingUp className="h-6 w-6 text-primary-foreground" />
+                        </div>
+                        <h3 className="text-lg font-bold">Loan Tracking</h3>
+                        <p className="text-sm text-muted-foreground">Manage loan cycles, from disbursement to full repayment, with automated status updates.</p>
+                    </div>
+                     <div className="grid gap-2 text-center">
+                       <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
+                            <CheckCircle className="h-6 w-6 text-primary-foreground" />
+                        </div>
+                        <h3 className="text-lg font-bold">Repayment Records</h3>
+                        <p className="text-sm text-muted-foreground">Easily record and view every repayment, ensuring your books are always accurate.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+      </main>
+      <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+          <p className="text-xs text-muted-foreground">&copy; 2024 Oriango MicroFinance. All rights reserved.</p>
+          <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+              <Link href="#" className="text-xs hover:underline underline-offset-4">Terms of Service</Link>
+              <Link href="#" className="text-xs hover:underline underline-offset-4">Privacy</Link>
+          </nav>
+      </footer>
     </div>
   );
 }

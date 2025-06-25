@@ -28,14 +28,18 @@ import {
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
 
+  if (pathname === '/') {
+    return <>{children}</>;
+  }
+
   const navItems = [
-    { href: '/', label: 'Dashboard', icon: Home },
+    { href: '/dashboard', label: 'Dashboard', icon: Home },
     { href: '/borrowers', label: 'Borrowers', icon: Users },
     { href: '/loans', label: 'Loans', icon: Landmark },
   ];
 
   const getPageTitle = () => {
-    if (pathname === '/') return 'Dashboard';
+    if (pathname.startsWith('/dashboard')) return 'Dashboard';
     if (pathname.startsWith('/borrowers/')) return 'Borrower Details';
     if (pathname.startsWith('/borrowers')) return 'Borrowers';
     if (pathname.startsWith('/loans/')) return 'Loan Details';
@@ -44,7 +48,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   }
   
   const isActive = (href: string) => {
-    return href === '/' ? pathname === href : pathname.startsWith(href);
+    return pathname.startsWith(href);
   }
 
   return (
