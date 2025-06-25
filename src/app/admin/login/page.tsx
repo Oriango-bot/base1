@@ -115,8 +115,8 @@ export default function AdminLoginPage() {
             {showSignupLink && (
                 <div className="mt-4 text-center text-sm text-primary">
                     No Super Admin account found.{' '}
-                    <Link href="/signup" className="underline font-bold">
-                        Create the first account now.
+                    <Link href="/admin/signup" className="underline font-bold">
+                        Create the Super Admin account now.
                     </Link>
                 </div>
             )}
