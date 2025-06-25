@@ -1,7 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, Users, CheckCircle } from 'lucide-react';
+import { TrendingUp, FileText, ClipboardCheck, CalendarClock } from 'lucide-react';
 
 export default function HomePage() {
   return (
@@ -27,16 +27,21 @@ export default function HomePage() {
               <div className="flex flex-col justify-center space-y-4">
                 <div className="space-y-4">
                   <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl xl:text-6xl/none">
-                    Simple, Clear Micro-Finance Management
+                    Financial Empowerment, Made Simple
                   </h1>
                   <p className="max-w-[600px] text-muted-foreground md:text-xl">
-                    Oriango helps you manage loans, borrowers, and repayments with ease. Get a clear view of your micro-finance operations and empower your community.
+                    Oriango provides accessible micro-loans to help you achieve your goals. Our clear process and supportive platform are here to help you grow.
                   </p>
                 </div>
                 <div className="flex flex-col gap-2 min-[400px]:flex-row">
                   <Button asChild size="lg">
-                    <Link href="/dashboard">
-                      Go to Dashboard
+                    <Link href="/signup">
+                      Get Started
+                    </Link>
+                  </Button>
+                   <Button asChild size="lg" variant="outline">
+                    <Link href="/login">
+                      Access Your Account
                     </Link>
                   </Button>
                 </div>
@@ -57,34 +62,34 @@ export default function HomePage() {
             <div className="container px-4 md:px-6">
                 <div className="flex flex-col items-center justify-center space-y-4 text-center">
                     <div className="space-y-3">
-                        <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Key Features</div>
-                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Features to Empower Your Work</h2>
+                        <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Why Oriango?</div>
+                        <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">A Better Way to Borrow</h2>
                         <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                            Everything you need to run a successful micro-lending service.
+                            We believe in providing fair, transparent, and accessible financial tools to everyone.
                         </p>
                     </div>
                 </div>
                 <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 mt-12">
                     <div className="grid gap-2 text-center">
                        <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
-                            <Users className="h-6 w-6 text-primary-foreground" />
+                            <FileText className="h-6 w-6 text-primary-foreground" />
                         </div>
-                        <h3 className="text-lg font-bold">User Management</h3>
-                        <p className="text-sm text-muted-foreground">Keep track of all your users, their profiles, and loan histories in one place.</p>
+                        <h3 className="text-lg font-bold">Quick Applications</h3>
+                        <p className="text-sm text-muted-foreground">Apply for a loan in minutes with our straightforward online application process.</p>
                     </div>
                      <div className="grid gap-2 text-center">
                        <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
-                            <TrendingUp className="h-6 w-6 text-primary-foreground" />
+                            <ClipboardCheck className="h-6 w-6 text-primary-foreground" />
                         </div>
-                        <h3 className="text-lg font-bold">Loan Tracking</h3>
-                        <p className="text-sm text-muted-foreground">Manage loan cycles, from disbursement to full repayment, with automated status updates.</p>
+                        <h3 className="text-lg font-bold">Transparent Terms</h3>
+                        <p className="text-sm text-muted-foreground">No hidden fees. Understand your loan terms, interest rates, and repayment schedule upfront.</p>
                     </div>
                      <div className="grid gap-2 text-center">
                        <div className="mx-auto bg-primary flex items-center justify-center size-12 rounded-full mb-2">
-                            <CheckCircle className="h-6 w-6 text-primary-foreground" />
+                            <CalendarClock className="h-6 w-6 text-primary-foreground" />
                         </div>
-                        <h3 className="text-lg font-bold">Repayment Records</h3>
-                        <p className="text-sm text-muted-foreground">Easily record and view every repayment, ensuring your books are always accurate.</p>
+                        <h3 className="text-lg font-bold">Flexible Repayments</h3>
+                        <p className="text-sm text-muted-foreground">Manage your repayments easily through your personal dashboard with clear schedules.</p>
                     </div>
                 </div>
             </div>
