@@ -559,3 +559,42 @@ export async function getFormSeries() {
         return [];
     }
 }
+
+export async function createFormSeries(formData: FormData) {
+    const prefix = formData.get('prefix') as string;
+    const start_number = parseInt(formData.get('start_number') as string, 10);
+    const end_number = parseInt(formData.get('end_number') as string, 10);
+    const partner_id = parseInt(formData.get('partner_id') as string, 10);
+    const created_by = formData.get('created_by') as string;
+
+    if (!prefix || isNaN(start_number) || isNaN(end_number) || isNaN(partner_id) || !created_by) {
+        return { success: false, error: 'Missing or invalid required fields.' };
+    }
+    
+    if (start_number >= end_number) {
+        return { success: false, error: 'Start number must be less than end number.' };
+    }
+
+    try {
+        const client = await clientPromise;
+        const db = client.db("oriango");
+        const formSeriesCollection = db.collection('form_series_register');
+        
+        const newSeriesDoc = {
+            prefix,
+            start_number,
+            end_number,
+            partner_id,
+            status: 'active' as 'active' | 'revoked' | 'frozen',
+            created_by,
+            createdAt: new Date().toISOString(),
+        };
+
+        await formSeriesCollection.insertOne(newSeriesDoc);
+
+        return { success: true };
+    } catch (error) {
+        console.error("Failed to create form series:", error);
+        return { success: false, error: 'An unexpected server error occurred.' };
+    }
+}

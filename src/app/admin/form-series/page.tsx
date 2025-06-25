@@ -1,3 +1,6 @@
+'use client';
+
+import { useState, useEffect } from 'react';
 import { getFormSeries } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import {
@@ -9,18 +12,45 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import type { FormSeries, User } from '@/lib/types';
+import AddFormSeriesDialog from '@/components/add-form-series-dialog';
 
-export default async function FormSeriesPage() {
-    const series = await getFormSeries();
+export default function FormSeriesPage() {
+    const [series, setSeries] = useState<FormSeries[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+    useEffect(() => {
+        const storedUser = localStorage.getItem('loggedInUser');
+        if (storedUser) {
+          setCurrentUser(JSON.parse(storedUser));
+        }
+
+        getFormSeries().then(data => {
+            setSeries(data);
+            setIsLoading(false);
+        });
+    }, []);
+
+    const handleSeriesAdded = () => {
+        setIsLoading(true);
+        getFormSeries().then(data => {
+            setSeries(data);
+            setIsLoading(false);
+        });
+    };
 
     return (
         <Card>
-            <CardHeader>
-                <CardTitle>Form Series Registry</CardTitle>
-                <CardDescription>Manage form number validation rules for all partners.</CardDescription>
+            <CardHeader className="flex flex-row items-center justify-between">
+                <div>
+                    <CardTitle>Form Series Registry</CardTitle>
+                    <CardDescription>Manage form number validation rules for all partners.</CardDescription>
+                </div>
+                {currentUser?.role === 'super-admin' && <AddFormSeriesDialog onSeriesAdded={handleSeriesAdded} />}
             </CardHeader>
             <CardContent>
-                {/* TODO: Add "New Series" Dialog */}
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -31,7 +61,20 @@ export default async function FormSeriesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {series.length > 0 ? (
+                        {isLoading ? (
+                            <>
+                                <TableRow>
+                                    <TableCell colSpan={4}>
+                                        <Skeleton className="h-8 w-full" />
+                                    </TableCell>
+                                </TableRow>
+                                <TableRow>
+                                    <TableCell colSpan={4}>
+                                        <Skeleton className="h-8 w-full" />
+                                    </TableCell>
+                                </TableRow>
+                            </>
+                        ) : series.length > 0 ? (
                             series.map((s) => (
                                 <TableRow key={s.id}>
                                     <TableCell className="font-semibold">{s.partner_id}</TableCell>
