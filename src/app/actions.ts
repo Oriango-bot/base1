@@ -124,11 +124,13 @@ export async function signupUser(data: FormData): Promise<{ user: User; error: s
     };
 
     const result = await usersCollection.insertOne(newUserDoc);
+    const createdUser = await usersCollection.findOne({_id: result.insertedId});
     
-    const finalUser = {
-      ...newUserDoc,
-      id: result.insertedId.toString(),
-    };
+    if (!createdUser) {
+        return { user: null, error: 'Failed to retrieve user after creation.' };
+    }
+
+    const finalUser = mapMongoId(createdUser);
     // @ts-ignore
     delete finalUser.password;
     
@@ -174,11 +176,13 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
     };
 
     const result = await usersCollection.insertOne(newUserDoc);
+    const createdUser = await usersCollection.findOne({_id: result.insertedId});
     
-    const finalUser = {
-      ...newUserDoc,
-      id: result.insertedId.toString(),
-    };
+     if (!createdUser) {
+        return { user: null, error: 'Failed to retrieve user after creation.' };
+    }
+
+    const finalUser = mapMongoId(createdUser);
     // @ts-ignore
     delete finalUser.password;
     
