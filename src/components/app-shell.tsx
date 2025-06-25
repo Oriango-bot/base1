@@ -14,7 +14,7 @@ import {
   SidebarMenuButton,
   SidebarInset,
   SidebarTrigger,
-  SidebarFooter,
+  SidebarFooter as SidebarFooterComponent,
 } from '@/components/ui/sidebar';
 import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,6 +28,8 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
+import { SheetTitle } from './ui/sheet';
+import Footer from './footer';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -42,7 +44,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
       setUser(JSON.parse(storedUser));
     } else {
       setUser(null);
-      const publicPages = ['/', '/login', '/signup'];
+      const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy'];
       if (!publicPages.includes(pathname)) {
         router.push('/login');
       }
@@ -56,7 +58,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     router.push('/login');
   };
 
-  const publicPages = ['/', '/login', '/signup'];
+  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy'];
   if (publicPages.includes(pathname) && !user) {
     return <>{children}</>;
   }
@@ -94,6 +96,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     if (pathname.startsWith('/loans')) return 'All Loans';
     if (pathname.startsWith('/super-admin/users')) return 'Manage User Roles';
     if (pathname.startsWith('/admin/form-series')) return 'Form Series Registry';
+    if (pathname.startsWith('/terms-of-service')) return 'Terms of Service';
+    if (pathname.startsWith('/privacy-policy')) return 'Privacy Policy';
     return 'Oriango';
   }
   
@@ -104,6 +108,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   return (
     <SidebarProvider>
       <Sidebar>
+         <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
         <SidebarHeader className="p-4">
           <Link href="/" className="flex items-center gap-2.5 text-primary">
             <Landmark className="h-7 w-7" />
@@ -114,7 +119,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           <SidebarMenu>
             {userNavItems.map((item) => (
               <SidebarMenuItem key={item.href}>
-                <SidebarMenuButton isActive={isActive(item.href)} asChild>
+                 <SidebarMenuButton isActive={isActive(item.href)} asChild>
                   <Link href={item.href}>
                     <item.icon />
                     <span>{item.label}</span>
@@ -124,7 +129,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
             ))}
           </SidebarMenu>
         </SidebarContent>
-         <SidebarFooter>
+         <SidebarFooterComponent>
           <SidebarMenu>
              <SidebarMenuItem>
                 <SidebarMenuButton onClick={handleLogout}>
@@ -133,7 +138,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-        </SidebarFooter>
+        </SidebarFooterComponent>
       </Sidebar>
       <SidebarInset>
         <header className="flex h-16 items-center justify-between gap-4 border-b bg-card px-6 sticky top-0 z-30">
@@ -161,6 +166,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
         <main className="flex-1 p-4 sm:p-6 lg:p-8 overflow-auto">
           {children}
         </main>
+        <Footer />
       </SidebarInset>
     </SidebarProvider>
   );
