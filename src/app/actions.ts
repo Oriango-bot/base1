@@ -125,6 +125,56 @@ export async function signupUser(data: FormData): Promise<{ user: User; error: s
   }
 }
 
+export async function addUserByAdmin(formData: FormData): Promise<{ user: User | null; error: string | null }> {
+  const name = formData.get('name') as string;
+  const email = formData.get('email') as string;
+  const password = formData.get('password') as string;
+  const phone = formData.get('phone') as string;
+  const address = formData.get('address') as string;
+
+  if (!name || !email || !password || !phone || !address) {
+    return { user: null, error: 'All fields are required.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db('oriango');
+    const usersCollection = db.collection('users');
+
+    const existingUser = await usersCollection.findOne({ email });
+    if (existingUser) {
+      return { user: null, error: 'An account with this email already exists.' };
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+    
+    const newUserDoc = {
+      name,
+      email,
+      password: hashedPassword,
+      phone,
+      address,
+      role: 'user' as UserRole, // Always 'user' when added by admin
+      joinDate: new Date().toISOString(),
+      partnerId: 1, // Default to Oriango
+    };
+
+    const result = await usersCollection.insertOne(newUserDoc);
+    
+    const finalUser = {
+      ...newUserDoc,
+      id: result.insertedId.toString(),
+    };
+    // @ts-ignore
+    delete finalUser.password;
+    
+    return { user: finalUser as User, error: null };
+  } catch (e) {
+    console.error(e);
+    return { user: null, error: 'An unexpected error occurred during user creation.' };
+  }
+}
+
 export async function updateUserRole(userId: string, newRole: UserRole) {
   try {
     const client = await clientPromise;
