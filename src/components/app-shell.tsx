@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
@@ -26,24 +27,27 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate fetching user from session/localStorage
+    setLoading(true);
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
       setUser(JSON.parse(storedUser));
     } else {
-      // If no user and not on a public page, redirect to login
+      setUser(null);
       const publicPages = ['/', '/login', '/signup'];
       if (!publicPages.includes(pathname)) {
         router.push('/login');
       }
     }
+    setLoading(false);
   }, [pathname, router]);
 
   const handleLogout = () => {
@@ -57,15 +61,23 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     return <>{children}</>;
   }
   
-  if (!user) {
-     return <div className="flex items-center justify-center h-screen">Loading...</div>;
+  if (loading || !user) {
+     return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <Skeleton className="h-6 w-32" />
+          </div>
+        </div>
+     )
   }
   
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['user'] },
     { href: '/admin/dashboard', label: 'Admin Dashboard', icon: ShieldCheck, roles: ['admin'] },
     { href: '/super-admin/dashboard', label: 'SA Dashboard', icon: ShieldCheck, roles: ['super-admin'] },
-    { href: '/users', label: 'Users', icon: Users, roles: ['admin', 'super-admin'] },
+    // Corrected link to point to `/borrowers` as per directory structure
+    { href: '/borrowers', label: 'Users', icon: Users, roles: ['admin', 'super-admin'] },
     { href: '/super-admin/users', label: 'Manage Roles', icon: UserCog, roles: ['super-admin'] },
     { href: '/loans', label: 'All Loans', icon: Landmark, roles: ['admin', 'super-admin'] },
   ];
@@ -76,8 +88,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     if (pathname === '/dashboard') return 'User Dashboard';
     if (pathname === '/admin/dashboard') return 'Admin Dashboard';
     if (pathname === '/super-admin/dashboard') return 'Super Admin Dashboard';
-    if (pathname.startsWith('/users/')) return 'User Details';
-    if (pathname.startsWith('/users')) return 'Users';
+    if (pathname.startsWith('/borrowers/')) return 'User Details';
+    if (pathname.startsWith('/borrowers')) return 'All Users';
     if (pathname.startsWith('/loans/')) return 'Loan Details';
     if (pathname.startsWith('/loans')) return 'All Loans';
     if (pathname.startsWith('/super-admin/users')) return 'Manage User Roles';

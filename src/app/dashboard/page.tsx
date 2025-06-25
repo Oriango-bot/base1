@@ -1,3 +1,4 @@
+
 'use client';
 import {
   Card,
@@ -6,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { loans as allLoans } from "@/lib/data";
+import { getLoansForUser } from '@/app/actions';
 import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -16,24 +17,37 @@ import { useEffect, useState } from "react";
 import type { Loan, User } from "@/lib/types";
 import { Button } from "@/components/ui/button";
 import LoanEligibilityCalculator from "@/components/loan-eligibility-calculator";
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Dashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [userLoans, setUserLoans] = useState<Loan[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
       const parsedUser = JSON.parse(storedUser);
       setUser(parsedUser);
-      setUserLoans(allLoans.filter(loan => loan.borrowerId === parsedUser.id));
+      setIsLoading(true);
+      getLoansForUser(parsedUser.id)
+        .then(loans => {
+          setUserLoans(loans);
+          setIsLoading(false);
+        });
+    } else {
+        setIsLoading(false);
     }
   }, []);
+
+  if (isLoading) {
+    return <DashboardSkeleton />;
+  }
 
   if (!user) {
     return (
         <div className="flex items-center justify-center h-full">
-            <p>Loading user data...</p>
+            <p>Could not load user data. Please try logging in again.</p>
         </div>
     );
   }
@@ -146,4 +160,44 @@ export default function Dashboard() {
       </div>
     </div>
   );
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-8 animate-pulse">
+        <Skeleton className="h-9 w-1/3" />
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card><CardHeader><Skeleton className="h-5 w-2/3" /></CardHeader><CardContent><Skeleton className="h-8 w-1/2" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-2/3" /></CardHeader><CardContent><Skeleton className="h-8 w-1/2" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-2/3" /></CardHeader><CardContent><Skeleton className="h-8 w-1/2" /></CardContent></Card>
+            <Card><CardHeader><Skeleton className="h-5 w-2/3" /></CardHeader><CardContent><Skeleton className="h-8 w-1/2" /></CardContent></Card>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <Card className="lg:col-span-2">
+                <CardHeader>
+                    <Skeleton className="h-6 w-1/4" />
+                    <Skeleton className="h-4 w-2/4" />
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-4">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                </CardContent>
+            </Card>
+            <Card className="lg:col-span-1">
+                 <CardHeader>
+                    <Skeleton className="h-6 w-3/4" />
+                    <Skeleton className="h-4 w-full" />
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </CardContent>
+            </Card>
+        </div>
+    </div>
+  )
 }

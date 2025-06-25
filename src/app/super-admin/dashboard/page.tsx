@@ -1,27 +1,31 @@
-'use client'
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { users, loans } from "@/lib/data";
-import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
+import { getDashboardStats } from "@/app/actions";
+import { formatCurrency } from "@/lib/utils";
 import { Landmark, Users, Wallet, HandCoins, UserCog } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { XCircle } from "lucide-react";
 
-export default function SuperAdminDashboard() {
-  const totalUsers = users.length;
-  const activeLoans = loans.filter(
-    (loan) => calculateOutstandingBalance(loan) > 0
-  ).length;
-  const totalLoaned = loans.reduce((acc, loan) => acc + loan.amount, 0);
-  const totalPaid = loans.reduce(
-    (acc, loan) =>
-      acc + loan.repayments.reduce((sum, p) => sum + p.amount, 0),
-    0
-  );
+export default async function SuperAdminDashboard() {
+  const { totalUsers, activeLoans, totalLoaned, totalPaid, error } = await getDashboardStats();
+
+  if (error) {
+    return (
+       <Alert variant="destructive">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+    )
+  }
+
 
   return (
     <div className="space-y-8">
@@ -95,7 +99,7 @@ export default function SuperAdminDashboard() {
                 </Link>
             </Button>
             <Button asChild variant="secondary">
-                <Link href="/users">View All Users</Link>
+                <Link href="/borrowers">View All Users</Link>
             </Button>
              <Button asChild variant="secondary">
                 <Link href="/loans">View All Loans</Link>

@@ -1,27 +1,30 @@
-'use client'
+
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { users, loans } from "@/lib/data";
-import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
+import { formatCurrency } from "@/lib/utils";
 import { Landmark, Users, Wallet, HandCoins } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { getDashboardStats } from "@/app/actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { XCircle } from "lucide-react";
 
-export default function AdminDashboard() {
-  const totalUsers = users.length;
-  const activeLoans = loans.filter(
-    (loan) => calculateOutstandingBalance(loan) > 0
-  ).length;
-  const totalLoaned = loans.reduce((acc, loan) => acc + loan.amount, 0);
-  const totalPaid = loans.reduce(
-    (acc, loan) =>
-      acc + loan.repayments.reduce((sum, p) => sum + p.amount, 0),
-    0
-  );
+export default async function AdminDashboard() {
+  const { totalUsers, activeLoans, totalLoaned, totalPaid, error } = await getDashboardStats();
+
+  if (error) {
+    return (
+       <Alert variant="destructive">
+          <XCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+    )
+  }
 
   return (
     <div className="space-y-8">
@@ -89,7 +92,7 @@ export default function AdminDashboard() {
         </CardHeader>
         <CardContent className="flex gap-4">
             <Button asChild>
-                <Link href="/users">Manage Users</Link>
+                <Link href="/borrowers">Manage Users</Link>
             </Button>
              <Button asChild variant="secondary">
                 <Link href="/loans">Manage Loans</Link>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -29,7 +30,9 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-export default function AddUserDialog() {
+// Note: The component is named AddBorrowerDialog to match the filename `add-borrower-dialog.tsx`.
+// The functionality remains for adding a "User".
+export default function AddBorrowerDialog() {
   const [open, setOpen] = useState(false);
   const {
     register,
@@ -41,7 +44,8 @@ export default function AddUserDialog() {
   });
 
   const onSubmit = (data: UserFormValues) => {
-    // In a real app, this would be an API call
+    // In a real app, this would be an API call to a server action.
+    // e.g., `await addUserByAdmin(data);`
     console.log('New User:', data);
     toast({
       title: "User Added",

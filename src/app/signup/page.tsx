@@ -9,58 +9,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { Loader2, TrendingUp } from 'lucide-react';
-import type { User, UserRole } from '@/lib/types';
-
-// This is a placeholder for a server action.
-// In a real app, this would be in a separate actions file.
-async function signupUser(data: FormData): Promise<{ user: any; error: string | null }> {
-  'use server';
-  const bcrypt = require('bcryptjs');
-  const { default: clientPromise } = await import('@/lib/mongodb');
-  
-  const name = data.get('name') as string;
-  const email = data.get('email') as string;
-  const password = data.get('password') as string;
-  const phone = data.get('phone') as string;
-  const address = data.get('address') as string;
-
-  if (!name || !email || !password || !phone || !address) {
-    return { user: null, error: 'All fields are required.' };
-  }
-
-  try {
-    const client = await clientPromise;
-    const db = client.db('oriango');
-    const usersCollection = db.collection('users');
-
-    const existingUser = await usersCollection.findOne({ email });
-    if (existingUser) {
-      return { user: null, error: 'An account with this email already exists.' };
-    }
-
-    const isSuperAdminPresent = await usersCollection.findOne({ role: 'super-admin' });
-    const role: UserRole = isSuperAdminPresent ? 'user' : 'super-admin';
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
-    const newUser: Omit<User, 'id'> = {
-      name,
-      email,
-      password: hashedPassword,
-      phone,
-      address,
-      role,
-      joinDate: new Date().toISOString(),
-    };
-
-    const result = await usersCollection.insertOne(newUser);
-    
-    return { user: { id: result.insertedId.toString(), ...newUser }, error: null };
-  } catch (e) {
-    console.error(e);
-    return { user: null, error: 'An unexpected error occurred during signup.' };
-  }
-}
+import { signupUser } from '@/app/actions';
 
 export default function SignupPage() {
   const router = useRouter();

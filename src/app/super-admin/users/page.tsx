@@ -1,3 +1,4 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,35 +10,16 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { User, UserRole } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
-import { updateUserRole } from '@/app/actions';
-
-async function getUsers(): Promise<User[]> {
-    'use server';
-    const { default: clientPromise } = await import('@/lib/mongodb');
-    const client = await clientPromise;
-    const db = client.db('oriango');
-    const users = await db.collection('users').find({}).toArray();
-    return users.map(user => ({
-        ...user,
-        id: user._id.toString(),
-        // Make sure all required fields are present
-        name: user.name || '',
-        email: user.email || '',
-        phone: user.phone || '',
-        address: user.address || '',
-        joinDate: user.joinDate || '',
-        role: user.role || 'user',
-    })) as User[];
-}
-
+import { updateUserRole, getUsers } from '@/app/actions';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function ManageUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
   const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -46,7 +28,12 @@ export default function ManageUsersPage() {
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));
     }
-    getUsers().then(setUsers);
+    
+    setIsLoading(true);
+    getUsers().then(fetchedUsers => {
+      setUsers(fetchedUsers);
+      setIsLoading(false);
+    });
   }, []);
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
@@ -115,32 +102,49 @@ export default function ManageUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {users.map((user) => (
-              <TableRow key={user.id}>
-                <TableCell className="font-medium">{user.name}</TableCell>
-                <TableCell className="text-muted-foreground">{user.email}</TableCell>
-                <TableCell>
-                    <Badge variant={user.role === 'super-admin' ? 'default' : (user.role === 'admin' ? 'secondary' : 'outline')}>
-                        {user.role}
-                    </Badge>
-                </TableCell>
-                <TableCell className="text-right">
-                    <Select
-                        defaultValue={user.role}
-                        onValueChange={(value) => handleRoleChange(user.id, value as UserRole)}
-                        disabled={user.id === currentUser?.id || user.role === 'super-admin'}
-                    >
-                        <SelectTrigger className="w-[120px]">
-                            <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="user">User</SelectItem>
-                            <SelectItem value="admin">Admin</SelectItem>
-                        </SelectContent>
-                  </Select>
-                </TableCell>
-              </TableRow>
-            ))}
+            {isLoading ? (
+                <>
+                    <TableRow>
+                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-28" /></TableCell>
+                    </TableRow>
+                    <TableRow>
+                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
+                        <TableCell><Skeleton className="h-5 w-40" /></TableCell>
+                        <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-28" /></TableCell>
+                    </TableRow>
+                </>
+            ) : (
+                users.map((user) => (
+                <TableRow key={user.id}>
+                    <TableCell className="font-medium">{user.name}</TableCell>
+                    <TableCell className="text-muted-foreground">{user.email}</TableCell>
+                    <TableCell>
+                        <Badge variant={user.role === 'super-admin' ? 'default' : (user.role === 'admin' ? 'secondary' : 'outline')}>
+                            {user.role}
+                        </Badge>
+                    </TableCell>
+                    <TableCell className="text-right">
+                        <Select
+                            defaultValue={user.role}
+                            onValueChange={(value) => handleRoleChange(user.id, value as UserRole)}
+                            disabled={user.id === currentUser?.id || user.role === 'super-admin'}
+                        >
+                            <SelectTrigger className="w-[120px] ml-auto">
+                                <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
+                            </SelectContent>
+                    </Select>
+                    </TableCell>
+                </TableRow>
+                ))
+            )}
           </TableBody>
         </Table>
       </CardContent>

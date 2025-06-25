@@ -1,6 +1,7 @@
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { users, loans } from '@/lib/data';
+import { getUserById, getLoansForUser } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
@@ -9,13 +10,13 @@ import { ArrowRight, Calendar, Phone, Home, Mail } from 'lucide-react';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import CreateLoanDialog from '@/components/create-loan-dialog';
 
-export default function UserDetailPage({ params }: { params: { id: string } }) {
-  const user = users.find((b) => b.id === params.id);
+export default async function UserDetailPage({ params }: { params: { id: string } }) {
+  const user = await getUserById(params.id);
   if (!user) {
     notFound();
   }
 
-  const userLoans = loans.filter((loan) => loan.borrowerId === user.id);
+  const userLoans = await getLoansForUser(user.id);
 
   return (
     <div className="grid gap-8 lg:grid-cols-3">

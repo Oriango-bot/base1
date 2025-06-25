@@ -1,5 +1,6 @@
+
 import Link from 'next/link';
-import { users, loans } from '@/lib/data';
+import { getLoansWithBorrowerDetails } from '@/app/actions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Table,
@@ -14,11 +15,8 @@ import { Badge } from '@/components/ui/badge';
 import { ArrowRight } from 'lucide-react';
 import { calculateOutstandingBalance, formatCurrency, getNextDueDate } from '@/lib/utils';
 
-export default function LoansPage() {
-  const allLoans = loans.map(loan => {
-    const user = users.find(b => b.id === loan.borrowerId);
-    return { ...loan, borrowerName: user?.name || 'Unknown' };
-  });
+export default async function LoansPage() {
+  const allLoans = await getLoansWithBorrowerDetails();
 
   return (
     <Card>

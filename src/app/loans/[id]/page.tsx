@@ -1,20 +1,23 @@
+
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { users, loans } from '@/lib/data';
+import { getLoanById, getUserById } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { calculateOutstandingBalance, formatCurrency, getNextDueDate } from '@/lib/utils';
 import RecordRepaymentDialog from '@/components/record-repayment-dialog';
 import AiSummaryDialog from '@/components/ai-summary-dialog';
+import type { User, Loan } from '@/lib/types';
 
-export default function LoanDetailPage({ params }: { params: { id: string } }) {
-  const loan = loans.find((l) => l.id === params.id);
+export default async function LoanDetailPage({ params }: { params: { id: string } }) {
+  const loan = await getLoanById(params.id);
   if (!loan) {
     notFound();
   }
 
-  const user = users.find((b) => b.id === loan.borrowerId);
+  // The borrowerId on loan objects is a string ID.
+  const user = await getUserById(loan.borrowerId);
   const outstandingBalance = calculateOutstandingBalance(loan);
   const totalPaid = loan.repayments.reduce((acc, p) => acc + p.amount, 0);
   const nextDueDate = getNextDueDate(loan);
@@ -27,7 +30,7 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
             <div>
               <CardTitle>Loan Details</CardTitle>
               <CardDescription>
-                For <Link href={`/users/${user?.id}`} className="text-primary hover:underline">{user?.name}</Link>
+                For <Link href={`/borrowers/${user?.id}`} className="text-primary hover:underline">{user?.name || 'Unknown User'}</Link>
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -67,8 +70,8 @@ export default function LoanDetailPage({ params }: { params: { id: string } }) {
               </TableHeader>
               <TableBody>
                 {loan.repayments.length > 0 ? (
-                  loan.repayments.map((repayment) => (
-                    <TableRow key={repayment.id}>
+                  loan.repayments.map((repayment, index) => (
+                    <TableRow key={repayment.id || `rep-${index}`}>
                       <TableCell>{new Date(repayment.date).toLocaleDateString()}</TableCell>
                       <TableCell className="text-right">{formatCurrency(repayment.amount)}</TableCell>
                     </TableRow>
