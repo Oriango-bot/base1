@@ -37,6 +37,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/about'];
+
   useEffect(() => {
     setLoading(true);
     const storedUser = localStorage.getItem('loggedInUser');
@@ -44,13 +46,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
       setUser(JSON.parse(storedUser));
     } else {
       setUser(null);
-      const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy'];
       if (!publicPages.includes(pathname)) {
         router.push('/login');
       }
     }
     setLoading(false);
-  }, [pathname, router]);
+  }, [pathname, router, publicPages]);
 
   const handleLogout = () => {
     localStorage.removeItem('loggedInUser');
@@ -58,7 +59,6 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     router.push('/login');
   };
 
-  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy'];
   if (publicPages.includes(pathname) && !user) {
     return <>{children}</>;
   }
