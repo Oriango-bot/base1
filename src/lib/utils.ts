@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import type { Loan } from './types';
-import { addWeeks, addMonths, parseISO } from 'date-fns';
+import { addWeeks, addMonths, parseISO, addDays } from 'date-fns';
 
 
 export function cn(...inputs: ClassValue[]) {
@@ -30,9 +30,16 @@ export function getNextDueDate(loan: Loan): Date | null {
         ? parseISO(loan.repayments[loan.repayments.length - 1].date)
         : parseISO(loan.issueDate);
     
-    if (loan.repaymentSchedule === 'weekly') {
-        return addWeeks(lastPaymentDate, 1);
-    } else {
-        return addMonths(lastPaymentDate, 1);
+    switch (loan.repaymentSchedule) {
+        case 'daily':
+            return addDays(lastPaymentDate, 1);
+        case 'weekly':
+            return addWeeks(lastPaymentDate, 1);
+        case 'bi-weekly':
+            return addWeeks(lastPaymentDate, 2);
+        case 'monthly':
+            return addMonths(lastPaymentDate, 1);
+        default:
+            return null;
     }
 }

@@ -212,17 +212,14 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 // --- Loan Actions ---
 
 export async function createLoan(formData: FormData) {
-  const amount = parseFloat(formData.get('amount') as string);
-  const interestRate = parseFloat(formData.get('interestRate') as string);
-  const repaymentSchedule = formData.get('repaymentSchedule') as 'weekly' | 'monthly';
-  const formNumber = formData.get('formNumber') as string;
   const borrowerId = formData.get('borrowerId') as string;
   const createdBy = formData.get('createdBy') as string;
+  const formNumber = formData.get('formNumber') as string;
 
-  if (!amount || !interestRate || !repaymentSchedule || !formNumber || !borrowerId || !createdBy) {
-    return { success: false, error: 'Missing required loan data.' };
+  if (!borrowerId || !createdBy || !formNumber) {
+    return { success: false, error: 'Missing required system data.' };
   }
-
+  
   try {
     const client = await clientPromise;
     const db = client.db("oriango");
@@ -267,16 +264,50 @@ export async function createLoan(formData: FormData) {
         return { success: false, error: 'No active form series found for Oriango (Partner ID 1). Please contact an administrator.' };
     }
     
-    const newLoanDoc = {
+    const newLoanDoc: Partial<Loan> = {
       borrowerId,
-      amount,
-      interestRate,
+      formNumber,
+      // Core fields
+      amount: parseFloat(formData.get('amount') as string),
+      interestRate: parseFloat(formData.get('interestRate') as string),
+      repaymentSchedule: formData.get('repaymentSchedule') as 'daily' | 'weekly' | 'bi-weekly' | 'monthly',
+      // Applicant Details
+      idNumber: formData.get('idNumber') as string,
+      dob: formData.get('dob') as string,
+      nextOfKinName: formData.get('nextOfKinName') as string,
+      nextOfKinRelationship: formData.get('nextOfKinRelationship') as string,
+      nextOfKinContact: formData.get('nextOfKinContact') as string,
+      // Employment
+      occupation: formData.get('occupation') as string,
+      employerName: formData.get('employerName') as string,
+      workLocation: formData.get('workLocation') as string,
+      workLandmark: formData.get('workLandmark') as string,
+      monthlyIncome: parseFloat(formData.get('monthlyIncome') as string),
+      sourceOfIncome: formData.get('sourceOfIncome') as string,
+      sourceOfIncomeOther: formData.get('sourceOfIncomeOther') as string,
+      // Loan Details
+      productType: formData.get('productType') as string,
+      loanPurpose: formData.getAll('loanPurpose') as string[],
+      loanPurposeOther: formData.get('loanPurposeOther') as string,
+      processingFee: parseFloat(formData.get('processingFee') as string),
+      // Security
+      hasCollateral: formData.get('hasCollateral') === 'true',
+      guarantors: [],
+      // Attachments & Declaration
+      attachments: {
+        idCopy: formData.get('attachments_idCopy') === 'true',
+        incomeProof: formData.get('attachments_incomeProof') === 'true',
+        guarantorIdCopies: formData.get('attachments_guarantorIdCopies') === 'true',
+        businessLicense: formData.get('attachments_businessLicense') === 'true',
+        passportPhoto: formData.get('attachments_passportPhoto') === 'true',
+      },
+      declarationSignature: formData.get('declarationSignature') as string,
+      declarationDate: new Date().toISOString(),
+      // System Fields
       issueDate: new Date().toISOString(),
-      repaymentSchedule,
       status: 'pending' as LoanStatus,
       statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
       repayments: [],
-      formNumber,
       partnerId,
       createdBy,
       validationSource,
@@ -335,7 +366,7 @@ export async function getLoanById(loanId: string): Promise<Loan | null> {
         const client = await clientPromise;
         const db = client.db("oriango");
         const loan = await db.collection('loans').findOne({ _id: new ObjectId(loanId) });
-        return loan ? mapMongoId(loan) as Loan : null;
+        return loan ? mapMongoId(loan as any) as Loan : null;
     } catch (error) {
         console.error(`Failed to get loan ${loanId}:`, error);
         return null;
@@ -347,7 +378,7 @@ export async function getLoansForUser(userId: string): Promise<Loan[]> {
         const client = await clientPromise;
         const db = client.db("oriango");
         const loans = await db.collection('loans').find({ borrowerId: userId }).toArray();
-        return loans.map(loan => mapMongoId(loan)) as Loan[];
+        return loans.map(loan => mapMongoId(loan as any)) as Loan[];
     } catch (error) {
         console.error(`Failed to get loans for user ${userId}:`, error);
         return [];

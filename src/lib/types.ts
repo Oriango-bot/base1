@@ -32,7 +32,7 @@ export type Loan = {
   amount: number;
   interestRate: number; // as a percentage, e.g., 5 for 5%
   issueDate: string;
-  repaymentSchedule: 'weekly' | 'monthly';
+  repaymentSchedule: 'daily' | 'weekly' | 'bi-weekly' | 'monthly';
   status: LoanStatus;
   repayments: Repayment[];
   formNumber: string;
@@ -40,6 +40,42 @@ export type Loan = {
   createdBy: string; // User ID of the admin who created the loan
   validationSource: string; // e.g., 'form_series_register' or 'uniqueness_only'
   statusHistory: StatusHistoryEntry[];
+  
+  // NEW FIELDS FROM FORM
+  idNumber?: string;
+  dob?: string;
+  nextOfKinName?: string;
+  nextOfKinRelationship?: string;
+  nextOfKinContact?: string;
+
+  occupation?: string;
+  employerName?: string;
+  workLocation?: string;
+  workLandmark?: string;
+  monthlyIncome?: number;
+  sourceOfIncome?: string; // 'salary', 'business', 'farming', 'other'
+  sourceOfIncomeOther?: string;
+
+  productType?: string; // 'biz-flex', 'hustle-flex', 'rent-flex'
+  loanPurpose?: string[]; // ['stock', 'rent', etc.]
+  loanPurposeOther?: string;
+  processingFee?: number;
+  
+  hasCollateral?: boolean;
+  collateral?: { description: string }[];
+  collateralValue?: number;
+  guarantors?: { name: string; idNumber: string; phone: string; }[];
+  
+  attachments?: {
+    idCopy: boolean;
+    incomeProof: boolean;
+    guarantorIdCopies: boolean;
+    businessLicense: boolean;
+    passportPhoto: boolean;
+  };
+  
+  declarationSignature?: string; // just applicant name for now
+  declarationDate?: string;
 };
 
 export type FormSeries = {
