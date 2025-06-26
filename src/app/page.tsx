@@ -99,7 +99,7 @@ export default function HomePage() {
                 </div>
               </div>
               <Image
-                src="https://placehold.co/600x400.png"
+                src="https://i.ibb.co/s9wSmHyn/IMG-20250626-091905-562.jpg"
                 width="600"
                 height="400"
                 alt="Hero"
