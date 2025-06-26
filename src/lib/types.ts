@@ -38,7 +38,6 @@ export type Loan = {
   formNumber: string;
   partnerId: number;
   createdBy: string; // User ID of the admin who created the loan
-  validationSource: string; // e.g., 'form_series_register' or 'uniqueness_only'
   statusHistory: StatusHistoryEntry[];
   
   // NEW FIELDS FROM FORM

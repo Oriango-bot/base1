@@ -288,15 +288,15 @@ export async function adminUpdatePassword(adminId: string, targetUserId: string,
 export async function createLoan(formData: FormData) {
   const borrowerId = formData.get('borrowerId') as string;
   const createdBy = formData.get('createdBy') as string;
-  const formNumber = formData.get('formNumber') as string;
 
-  if (!borrowerId || !createdBy || !formNumber) {
+  if (!borrowerId || !createdBy) {
     return { success: false, error: 'Missing required system data.' };
   }
   
   try {
     const client = await clientPromise;
     const db = client.db("oriango");
+    const loansCollection = db.collection('loans');
     
     const creator = await db.collection('users').findOne({ _id: new ObjectId(createdBy) });
     if (!creator) {
@@ -304,40 +304,19 @@ export async function createLoan(formData: FormData) {
     }
     // @ts-ignore
     const partnerId = creator.partnerId;
-
-    const existingLoan = await db.collection('loans').findOne({ formNumber });
-    if (existingLoan) {
-      return { success: false, error: `Form number ${formNumber} is already in use.` };
+    
+    // Generate a unique form number
+    let formNumber: string;
+    let isUnique = false;
+    while (!isUnique) {
+        const uniquePart = randomBytes(4).toString('hex').toUpperCase();
+        formNumber = `P-25-MLD-GEN-${uniquePart}`;
+        const existingLoan = await loansCollection.findOne({ formNumber });
+        if (!existingLoan) {
+            isUnique = true;
+        }
     }
 
-    let validationSource = 'uniqueness_only';
-
-    const activeSeries = await db.collection('form_series_register').findOne({ 
-        partner_id: partnerId,
-        status: 'active'
-    });
-    
-    if (activeSeries) {
-        validationSource = 'form_series_register';
-        
-        if (!formNumber.startsWith(activeSeries.prefix)) {
-            return { success: false, error: `Form number must start with prefix "${activeSeries.prefix}".` };
-        }
-
-        const numberPart = formNumber.substring(activeSeries.prefix.length);
-        const number = parseInt(numberPart, 10);
-
-        if (isNaN(number)) {
-            return { success: false, error: 'Form number does not contain a valid number after the prefix.' };
-        }
-
-        if (number < activeSeries.start_number || number > activeSeries.end_number) {
-            return { success: false, error: `Form number ${number} is outside the allowed range (${activeSeries.start_number}-${activeSeries.end_number}).` };
-        }
-    } else if (partnerId === 1) {
-        return { success: false, error: 'No active form series found for Oriango (Partner ID 1). Please contact an administrator.' };
-    }
-    
     const amount = parseFloat(formData.get('amount') as string);
     const interestRate = 15; // Standard 15% flat rate
     const processingFee = amount * 0.025; // 2.5% processing fee
@@ -388,10 +367,9 @@ export async function createLoan(formData: FormData) {
       repayments: [],
       partnerId,
       createdBy,
-      validationSource,
     };
 
-    const result = await db.collection('loans').insertOne(newLoanDoc);
+    const result = await loansCollection.insertOne(newLoanDoc);
 
     return { success: true, loanId: result.insertedId.toString() };
   } catch (error) {

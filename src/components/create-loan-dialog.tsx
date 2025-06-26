@@ -11,7 +11,6 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
-  DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -26,13 +25,10 @@ import type { User } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Textarea } from './ui/textarea';
 import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
 
 
 const loanSchema = z.object({
-  formNumber: z.string().min(1, 'Form number is required.'),
-  
   // Step 1
   idNumber: z.string().min(5, 'A valid ID/Passport number is required.'),
   dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format." }),
@@ -101,7 +97,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     defaultValues: {
       loanPurpose: [],
       repaymentSchedule: 'monthly',
-      formNumber: '',
       hasCollateral: false,
     },
   });
@@ -144,7 +139,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     if (result.success) {
       toast({
         title: 'Loan Application Submitted',
-        description: `The application for ${data.formNumber} is now pending review.`,
+        description: `Your application is now pending review.`,
       });
       form.reset();
       setStep(1);
@@ -163,7 +158,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     let fields: (keyof LoanFormValues)[] = [];
     if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome'];
-    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule', 'formNumber'];
+    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule'];
     if (step === 4) fields = ['hasCollateral'];
     
     const isValid = await trigger(fields);
@@ -248,7 +243,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                    <section className="space-y-4">
                       <h3 className="font-semibold">3. Loan Details</h3>
                       <div className="grid grid-cols-2 gap-4">
-                          <div><Label>Form Number</Label><Input {...register('formNumber')} />{errors.formNumber && <p className="text-destructive text-xs mt-1">{errors.formNumber.message}</p>}</div>
                           <Controller name="productType" control={control} render={({ field }) => (
                               <div><Label>Loan Product Type</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger><SelectContent><SelectItem value="biz-flex">Biz Flex</SelectItem><SelectItem value="hustle-flex">Hustle Flex</SelectItem><SelectItem value="rent-flex">Rent Flex</SelectItem></SelectContent></Select>{errors.productType && <p className="text-destructive text-xs mt-1">{errors.productType.message}</p>}</div>
                           )}/>
