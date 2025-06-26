@@ -50,6 +50,9 @@ const summarizeLoanHistoryFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+        throw new Error("The AI model could not generate a summary. Please try again.");
+    }
+    return output;
   }
 );

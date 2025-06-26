@@ -11,9 +11,9 @@ import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const LoanEligibilityInputSchema = z.object({
-  monthlyIncome: z.number().positive().describe('The applicant\'s total monthly income.'),
-  monthlyDebt: z.number().nonnegative().describe('The applicant\'s total monthly debt payments (e.g., rent, other loans).'),
-  creditScore: z.number().min(300).max(850).describe('The applicant\'s credit score.'),
+  monthlyIncome: z.number().positive().describe("The applicant's total monthly income."),
+  monthlyDebt: z.number().nonnegative().describe("The applicant's total monthly debt payments (e.g., rent, other loans)."),
+  creditScore: z.number().min(300).max(850).describe("The applicant's credit score."),
   loanAmount: z.number().positive().describe('The requested loan amount.'),
 });
 export type LoanEligibilityInput = z.infer<typeof LoanEligibilityInputSchema>;
@@ -64,6 +64,9 @@ const loanEligibilityFlow = ai.defineFlow(
   },
   async input => {
     const {output} = await prompt(input);
-    return output!;
+    if (!output) {
+      throw new Error("The AI model did not return a valid eligibility assessment. Please try again.");
+    }
+    return output;
   }
 );
