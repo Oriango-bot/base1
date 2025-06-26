@@ -57,9 +57,14 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   }, [pathname, router]);
 
   const handleLogout = () => {
+    const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
     localStorage.removeItem('loggedInUser');
     setUser(null);
-    router.push('/login');
+    if (isAdmin) {
+      router.push('/admin/login');
+    } else {
+      router.push('/login');
+    }
   };
 
   if (publicPages.includes(pathname) && !user) {
