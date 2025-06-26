@@ -2,6 +2,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -27,6 +28,9 @@ export default function ForgotPasswordPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogContent, setDialogContent] = useState({ title: '', description: '' });
+  const searchParams = useSearchParams();
+  const loginPath = searchParams.get('from') === 'admin' ? '/admin/login' : '/login';
+
 
   const handleResetRequest = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -90,7 +94,7 @@ export default function ForgotPasswordPage() {
             </form>
             <div className="mt-4 text-center text-sm">
                 Remember your password?{' '}
-                <Link href="/login" className="underline">
+                <Link href={loginPath} className="underline">
                 Login
                 </Link>
             </div>
