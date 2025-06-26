@@ -36,7 +36,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/admin/signup', '/about'];
+  const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/admin/signup', '/about', '/forgot-password'];
 
   useEffect(() => {
     setLoading(true);
