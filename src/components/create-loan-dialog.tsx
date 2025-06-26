@@ -55,9 +55,7 @@ const loanSchema = z.object({
   loanPurpose: z.array(z.string()).refine((value) => value.some((item) => item), { message: "You have to select at least one purpose." }),
   loanPurposeOther: z.string().optional(),
   repaymentSchedule: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
-  interestRate: z.coerce.number().min(0).max(100, { message: 'Interest rate must be between 0 and 100.' }),
-  processingFee: z.coerce.number().nonnegative('Processing fee cannot be negative.'),
-
+  
   // Step 4
   hasCollateral: z.boolean().default(false),
   collateral1: z.string().optional(),
@@ -165,7 +163,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     let fields: (keyof LoanFormValues)[] = [];
     if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome'];
-    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule', 'interestRate', 'processingFee', 'formNumber'];
+    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule', 'formNumber'];
     if (step === 4) fields = ['hasCollateral'];
     
     const isValid = await trigger(fields);
@@ -258,8 +256,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                            <Controller name="repaymentSchedule" control={control} render={({ field }) => (
                               <div><Label>Repayment Period</Label><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select Period" /></SelectTrigger><SelectContent><SelectItem value="daily">Daily</SelectItem><SelectItem value="weekly">Weekly</SelectItem><SelectItem value="bi-weekly">Every 2 Weeks</SelectItem><SelectItem value="monthly">Monthly</SelectItem></SelectContent></Select>{errors.repaymentSchedule && <p className="text-destructive text-xs mt-1">{errors.repaymentSchedule.message}</p>}</div>
                           )}/>
-                          <div><Label>Interest Rate (%)</Label><Input type="number" {...register('interestRate')} />{errors.interestRate && <p className="text-destructive text-xs mt-1">{errors.interestRate.message}</p>}</div>
-                          <div><Label>Processing Fee (KES)</Label><Input type="number" {...register('processingFee')} />{errors.processingFee && <p className="text-destructive text-xs mt-1">{errors.processingFee.message}</p>}</div>
                       </div>
                       <div>
                           <Label>Loan Purpose</Label>

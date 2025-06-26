@@ -338,12 +338,16 @@ export async function createLoan(formData: FormData) {
         return { success: false, error: 'No active form series found for Oriango (Partner ID 1). Please contact an administrator.' };
     }
     
+    const amount = parseFloat(formData.get('amount') as string);
+    const interestRate = 15; // Standard 15% flat rate
+    const processingFee = amount * 0.025; // 2.5% processing fee
+
     const newLoanDoc: Partial<Loan> = {
       borrowerId,
       formNumber,
       // Core fields
-      amount: parseFloat(formData.get('amount') as string),
-      interestRate: parseFloat(formData.get('interestRate') as string),
+      amount,
+      interestRate,
       repaymentSchedule: formData.get('repaymentSchedule') as 'daily' | 'weekly' | 'bi-weekly' | 'monthly',
       // Applicant Details
       idNumber: formData.get('idNumber') as string,
@@ -363,7 +367,7 @@ export async function createLoan(formData: FormData) {
       productType: formData.get('productType') as string,
       loanPurpose: formData.getAll('loanPurpose') as string[],
       loanPurposeOther: formData.get('loanPurposeOther') as string,
-      processingFee: parseFloat(formData.get('processingFee') as string),
+      processingFee,
       // Security
       hasCollateral: formData.get('hasCollateral') === 'true',
       guarantors: [],
