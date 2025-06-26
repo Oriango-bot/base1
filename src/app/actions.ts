@@ -9,6 +9,7 @@ import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
+import { randomBytes } from 'crypto';
 
 // --- Utility function to map MongoDB documents ---
 function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
@@ -208,6 +209,79 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
     return { success: false, error: (error as Error).message };
   }
 }
+
+
+export async function requestPasswordReset(formData: FormData): Promise<{ tempPass: string | null; message: string | null; error: string | null }> {
+  const email = formData.get('email') as string;
+
+  if (!email) {
+    return { tempPass: null, message: null, error: 'Email is required.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db('oriango');
+    const usersCollection = db.collection('users');
+
+    const user = await usersCollection.findOne({ email });
+
+    if (!user) {
+      // Don't reveal if user exists or not for security
+      return { tempPass: null, message: 'If an account with that email exists, a password reset has been initiated.', error: null };
+    }
+    
+    // In a real app, you'd generate a secure token and email a link.
+    // For this prototype, we generate a temporary password and return it.
+    // THIS IS NOT SECURE FOR PRODUCTION.
+    const tempPassword = randomBytes(8).toString('hex').slice(0, 8);
+    const hashedPassword = await bcrypt.hash(tempPassword, 10);
+
+    await usersCollection.updateOne(
+      { _id: user._id },
+      { $set: { password: hashedPassword } }
+    );
+    
+    return { tempPass: tempPassword, message: 'A temporary password has been generated.', error: null };
+  } catch (e) {
+    console.error(e);
+    return { tempPass: null, message: null, error: 'An unexpected error occurred.' };
+  }
+}
+
+export async function adminUpdatePassword(adminId: string, targetUserId: string, newPassword: string): Promise<{ success: boolean; error: string | null }> {
+  if (!adminId || !targetUserId || !newPassword) {
+    return { success: false, error: 'Missing required parameters.' };
+  }
+  
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const usersCollection = db.collection('users');
+    
+    // Verify admin privileges
+    const adminUser = await usersCollection.findOne({ _id: new ObjectId(adminId) });
+    if (!adminUser || adminUser.role !== 'super-admin') {
+      return { success: false, error: 'You do not have permission to perform this action.' };
+    }
+
+    // Hash new password and update user
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    const result = await usersCollection.updateOne(
+        { _id: new ObjectId(targetUserId) },
+        { $set: { password: hashedPassword } }
+    );
+    
+    if (result.modifiedCount === 0) {
+      return { success: false, error: 'Could not find the user to update.' };
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Failed to update password:", error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
 
 // --- Loan Actions ---
 

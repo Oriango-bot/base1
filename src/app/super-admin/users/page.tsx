@@ -16,6 +16,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Badge } from '@/components/ui/badge';
 import { updateUserRole, getUsers } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
+import ResetPasswordDialog from '@/components/reset-password-dialog';
 
 export default function ManageUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -98,7 +99,7 @@ export default function ManageUsersPage() {
               <TableHead>Name</TableHead>
               <TableHead>Email</TableHead>
               <TableHead>Current Role</TableHead>
-              <TableHead className="text-right">Change Role</TableHead>
+              <TableHead className="text-right w-[240px]">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -108,13 +109,13 @@ export default function ManageUsersPage() {
                         <TableCell><Skeleton className="h-5 w-32" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-48" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-28" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-full" /></TableCell>
                     </TableRow>
                     <TableRow>
                         <TableCell><Skeleton className="h-5 w-24" /></TableCell>
                         <TableCell><Skeleton className="h-5 w-40" /></TableCell>
                         <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-28" /></TableCell>
+                        <TableCell className="text-right"><Skeleton className="h-8 w-full" /></TableCell>
                     </TableRow>
                 </>
             ) : (
@@ -127,13 +128,19 @@ export default function ManageUsersPage() {
                             {user.role}
                         </Badge>
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right flex justify-end items-center gap-2">
+                         <ResetPasswordDialog 
+                            targetUserId={user.id} 
+                            targetUserName={user.name} 
+                            adminId={currentUser?.id} 
+                            disabled={user.id === currentUser?.id}
+                         />
                         <Select
                             defaultValue={user.role}
                             onValueChange={(value) => handleRoleChange(user.id, value as UserRole)}
                             disabled={user.id === currentUser?.id || user.role === 'super-admin'}
                         >
-                            <SelectTrigger className="w-[120px] ml-auto">
+                            <SelectTrigger className="w-[120px]">
                                 <SelectValue placeholder="Select role" />
                             </SelectTrigger>
                             <SelectContent>
