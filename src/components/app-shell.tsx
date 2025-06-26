@@ -101,6 +101,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     if (pathname.startsWith('/admin/form-series')) return 'Form Series Registry';
     if (pathname.startsWith('/terms-of-service')) return 'Terms of Service';
     if (pathname.startsWith('/privacy-policy')) return 'Privacy Policy';
+    if (pathname.startsWith('/profile')) return 'My Profile';
+    if (pathname.startsWith('/settings')) return 'Settings';
     return 'Oriango';
   }
   
@@ -158,8 +160,12 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>{user.name}</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Profile</DropdownMenuItem>
-              <DropdownMenuItem>Settings</DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/profile">Profile</Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link href="/settings">Settings</Link>
+              </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
