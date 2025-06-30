@@ -70,7 +70,7 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
     const db = client.db('oriango');
     const user = await db.collection('users').findOne({ email });
 
-    if (!user) {
+    if (!user || !user.password) {
       return { user: null, error: 'Invalid email or password.' };
     }
 
@@ -83,7 +83,7 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
     const { password: _password, ...userToReturn } = mapMongoId(user);
     return { user: userToReturn as User, error: null };
   } catch (e) {
-    console.error(e);
+    console.error("Error in loginUser action:", e);
     return { user: null, error: 'An unexpected error occurred.' };
   }
 }
@@ -135,7 +135,7 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
     const { password: _password, ...userToReturn } = mapMongoId(createdUser);
     return { user: userToReturn as User, error: null };
   } catch (e) {
-    console.error(e);
+    console.error("Error in signupUser action:", e);
     return { user: null, error: 'An unexpected error occurred during signup.' };
   }
 }
@@ -184,7 +184,7 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
     const { password: _password, ...userToReturn } = mapMongoId(createdUser);
     return { user: userToReturn as User, error: null };
   } catch (e) {
-    console.error(e);
+    console.error("Error in addUserByAdmin action:", e);
     return { user: null, error: 'An unexpected error occurred during user creation.' };
   }
 }
@@ -238,7 +238,7 @@ export async function requestPasswordReset(formData: FormData): Promise<{ tempPa
     
     return { tempPass: tempPassword, message: 'A temporary password has been generated.', error: null };
   } catch (e) {
-    console.error(e);
+    console.error("Error in requestPasswordReset action: ", e);
     return { tempPass: null, message: null, error: 'An unexpected error occurred.' };
   }
 }
@@ -680,5 +680,7 @@ export async function createFormSeries(formData: FormData) {
         return { success: false, error: 'An unexpected server error occurred.' };
     }
 }
+
+    
 
     
