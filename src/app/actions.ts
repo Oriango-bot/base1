@@ -11,7 +11,7 @@ import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { randomBytes } from 'crypto';
 
-// --- Utility function to map MongoDB documents ---
+// --- Utility function to map MongoDB documents (if needed elsewhere) ---
 function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
   const { _id, ...rest } = doc;
   return { ...rest, id: _id.toString() };
@@ -38,7 +38,16 @@ export async function getUsers(): Promise<User[]> {
     const client = await clientPromise;
     const db = client.db("oriango");
     const users = await db.collection('users').find({}).toArray();
-    return users.map(user => mapMongoId(user)) as User[];
+    return users.map(user => ({
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      joinDate: user.joinDate,
+      role: user.role,
+      partnerId: user.partnerId,
+    })) as User[];
   } catch (error) {
     console.error("Failed to get users:", error);
     return [];
@@ -50,7 +59,18 @@ export async function getUserById(userId: string): Promise<User | null> {
     const client = await clientPromise;
     const db = client.db("oriango");
     const user = await db.collection('users').findOne({ _id: new ObjectId(userId) });
-    return user ? mapMongoId(user) as User : null;
+    if (!user) return null;
+    
+    return {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      joinDate: user.joinDate,
+      role: user.role,
+      partnerId: user.partnerId,
+    } as User;
   } catch (error) {
     console.error(`Failed to get user ${userId}:`, error);
     return null;
@@ -80,8 +100,19 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
       return { user: null, error: 'Invalid email or password.' };
     }
     
-    const { password: _password, ...userToReturn } = mapMongoId(user);
-    return { user: userToReturn as User, error: null };
+    // Manually create a safe user object to return to the client
+    const userToReturn: User = {
+      id: user._id.toString(),
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      address: user.address,
+      joinDate: user.joinDate,
+      role: user.role,
+      partnerId: user.partnerId,
+    };
+    
+    return { user: userToReturn, error: null };
   } catch (e) {
     console.error("Error in loginUser action:", e);
     return { user: null, error: 'An unexpected error occurred.' };
@@ -132,8 +163,19 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
         return { user: null, error: 'Failed to retrieve user after creation.' };
     }
 
-    const { password: _password, ...userToReturn } = mapMongoId(createdUser);
-    return { user: userToReturn as User, error: null };
+    // Manually create a safe user object to return to the client
+    const userToReturn: User = {
+        id: createdUser._id.toString(),
+        name: createdUser.name,
+        email: createdUser.email,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        joinDate: createdUser.joinDate,
+        role: createdUser.role,
+        partnerId: createdUser.partnerId,
+    };
+
+    return { user: userToReturn, error: null };
   } catch (e) {
     console.error("Error in signupUser action:", e);
     return { user: null, error: 'An unexpected error occurred during signup.' };
@@ -181,8 +223,19 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
         return { user: null, error: 'Failed to retrieve user after creation.' };
     }
 
-    const { password: _password, ...userToReturn } = mapMongoId(createdUser);
-    return { user: userToReturn as User, error: null };
+    // Manually create a safe user object to return to the client
+    const userToReturn: User = {
+        id: createdUser._id.toString(),
+        name: createdUser.name,
+        email: createdUser.email,
+        phone: createdUser.phone,
+        address: createdUser.address,
+        joinDate: createdUser.joinDate,
+        role: createdUser.role,
+        partnerId: createdUser.partnerId,
+    };
+
+    return { user: userToReturn, error: null };
   } catch (e) {
     console.error("Error in addUserByAdmin action:", e);
     return { user: null, error: 'An unexpected error occurred during user creation.' };
