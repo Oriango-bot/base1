@@ -114,8 +114,8 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
     
     return { user: userToReturn, error: null };
   } catch (e) {
-    console.error("Error in loginUser action:", e);
-    return { user: null, error: 'An unexpected error occurred.' };
+    console.error("Detailed error in loginUser action:", (e as Error).message, (e as Error).stack);
+    return { user: null, error: 'An unexpected error occurred. Please check server logs for details.' };
   }
 }
 
@@ -177,8 +177,8 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
 
     return { user: userToReturn, error: null };
   } catch (e) {
-    console.error("Error in signupUser action:", e);
-    return { user: null, error: 'An unexpected error occurred during signup.' };
+    console.error("Detailed error in signupUser action:", (e as Error).message, (e as Error).stack);
+    return { user: null, error: 'An unexpected error occurred during signup. Please check server logs for details.' };
   }
 }
 
@@ -237,8 +237,8 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
 
     return { user: userToReturn, error: null };
   } catch (e) {
-    console.error("Error in addUserByAdmin action:", e);
-    return { user: null, error: 'An unexpected error occurred during user creation.' };
+    console.error("Detailed error in addUserByAdmin action:", (e as Error).message, (e as Error).stack);
+    return { user: null, error: 'An unexpected error occurred during user creation. Please check server logs for details.' };
   }
 }
 
@@ -737,3 +737,4 @@ export async function createFormSeries(formData: FormData) {
     
 
     
+
