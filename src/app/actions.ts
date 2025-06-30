@@ -80,11 +80,8 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
       return { user: null, error: 'Invalid email or password.' };
     }
     
-    const finalUser = mapMongoId(user);
-    // @ts-ignore
-    delete finalUser.password;
-
-    return { user: finalUser as User, error: null };
+    const { password: _password, ...userToReturn } = mapMongoId(user);
+    return { user: userToReturn as User, error: null };
   } catch (e) {
     console.error(e);
     return { user: null, error: 'An unexpected error occurred.' };
@@ -135,11 +132,8 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
         return { user: null, error: 'Failed to retrieve user after creation.' };
     }
 
-    const finalUser = mapMongoId(createdUser);
-    // @ts-ignore
-    delete finalUser.password;
-    
-    return { user: finalUser as User, error: null };
+    const { password: _password, ...userToReturn } = mapMongoId(createdUser);
+    return { user: userToReturn as User, error: null };
   } catch (e) {
     console.error(e);
     return { user: null, error: 'An unexpected error occurred during signup.' };
@@ -187,11 +181,8 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
         return { user: null, error: 'Failed to retrieve user after creation.' };
     }
 
-    const finalUser = mapMongoId(createdUser);
-    // @ts-ignore
-    delete finalUser.password;
-    
-    return { user: finalUser as User, error: null };
+    const { password: _password, ...userToReturn } = mapMongoId(createdUser);
+    return { user: userToReturn as User, error: null };
   } catch (e) {
     console.error(e);
     return { user: null, error: 'An unexpected error occurred during user creation.' };
@@ -689,3 +680,5 @@ export async function createFormSeries(formData: FormData) {
         return { success: false, error: 'An unexpected server error occurred.' };
     }
 }
+
+    
