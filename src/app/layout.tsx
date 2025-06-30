@@ -8,6 +8,7 @@ export const metadata: Metadata = {
   description: "A clear, simple micro finance money lending system.",
   icons: {
     icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 
