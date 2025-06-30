@@ -57,7 +57,7 @@ export async function getUserById(userId: string): Promise<User | null> {
   }
 }
 
-export async function loginUser(data: FormData): Promise<{ user: User; error: string | null }> {
+export async function loginUser(data: FormData): Promise<{ user: User | null; error: string | null }> {
   const email = data.get('email') as string;
   const password = data.get('password') as string;
 
@@ -80,14 +80,18 @@ export async function loginUser(data: FormData): Promise<{ user: User; error: st
       return { user: null, error: 'Invalid email or password.' };
     }
     
-    return { user: mapMongoId(user) as User, error: null };
+    const finalUser = mapMongoId(user);
+    // @ts-ignore
+    delete finalUser.password;
+
+    return { user: finalUser as User, error: null };
   } catch (e) {
     console.error(e);
     return { user: null, error: 'An unexpected error occurred.' };
   }
 }
 
-export async function signupUser(data: FormData): Promise<{ user: User; error: string | null }> {
+export async function signupUser(data: FormData): Promise<{ user: User | null; error: string | null }> {
   const name = data.get('name') as string;
   const email = data.get('email') as string;
   const password = data.get('password') as string;
