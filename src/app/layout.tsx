@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
@@ -6,6 +7,9 @@ import AppShell from "@/components/app-shell";
 export const metadata: Metadata = {
   title: "Oriango MicroFinance",
   description: "A clear, simple micro finance money lending system.",
+  icons: {
+    icon: "/favicon.ico",
+  },
 };
 
 export default function RootLayout({
