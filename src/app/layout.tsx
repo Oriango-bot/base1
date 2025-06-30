@@ -6,10 +6,6 @@ import AppShell from "@/components/app-shell";
 export const metadata: Metadata = {
   title: "Oriango MicroFinance",
   description: "A clear, simple micro finance money lending system.",
-  icons: {
-    icon: "/favicon.svg",
-    apple: "/favicon.svg",
-  },
 };
 
 export default function RootLayout({
