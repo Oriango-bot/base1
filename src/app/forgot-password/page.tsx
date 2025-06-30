@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,9 +21,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 
 
-export default function ForgotPasswordPage() {
+function ForgotPasswordForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -117,4 +118,39 @@ export default function ForgotPasswordPage() {
       </AlertDialog>
     </div>
   );
+}
+
+function LoadingSkeleton() {
+    return (
+        <div className="flex flex-col min-h-screen bg-background">
+            <main className="flex-1 flex items-center justify-center">
+                <Card className="w-full max-w-md mx-4">
+                    <CardHeader className="text-center">
+                        <Skeleton className="h-8 w-8 mx-auto" />
+                        <Skeleton className="h-7 w-3/4 mx-auto mt-4" />
+                        <Skeleton className="h-4 w-1/2 mx-auto mt-2" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <Skeleton className="h-4 w-16" />
+                            <Skeleton className="h-10 w-full" />
+                        </div>
+                        <Skeleton className="h-10 w-full" />
+                        <div className="mt-4 text-center text-sm">
+                            <Skeleton className="h-4 w-48 mx-auto" />
+                        </div>
+                    </CardContent>
+                </Card>
+            </main>
+            <Footer />
+        </div>
+    );
+}
+
+export default function ForgotPasswordPage() {
+    return (
+        <Suspense fallback={<LoadingSkeleton />}>
+            <ForgotPasswordForm />
+        </Suspense>
+    )
 }
