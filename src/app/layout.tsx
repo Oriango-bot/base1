@@ -8,7 +8,7 @@ export const metadata: Metadata = {
   title: "Oriango MicroFinance",
   description: "A clear, simple micro finance money lending system.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/favicon.svg",
   },
 };
 
