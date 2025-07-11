@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { TrendingUp, FileText, FileSearch, Wallet, Menu, Sparkles } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -11,13 +11,14 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
+import { OriangoLogo } from '@/components/oriango-logo';
 
 export default function HomePage() {
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
         <Link href="/" className="flex items-center justify-center gap-2">
-          <TrendingUp className="h-6 w-6 text-primary" />
+          <OriangoLogo className="h-6 w-6 text-primary" />
           <span className="font-semibold">Oriango</span>
         </Link>
         <nav className="ml-auto flex">

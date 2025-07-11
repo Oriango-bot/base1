@@ -9,10 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
-import { TrendingUp } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { loginUser } from '@/app/actions';
 import Footer from '@/components/footer';
+import { OriangoLogo } from '@/components/oriango-logo';
 
 
 export default function LoginPage() {
@@ -58,7 +58,7 @@ export default function LoginPage() {
             <Card className="w-full max-w-md mx-4">
             <CardHeader className="text-center">
                 <div className="flex justify-center items-center gap-2 mb-4">
-                    <TrendingUp className="h-8 w-8 text-primary" />
+                    <OriangoLogo className="h-8 w-8 text-primary" />
                     <h1 className="text-2xl font-bold">Oriango</h1>
                 </div>
                 <CardTitle className="text-2xl">User Login</CardTitle>

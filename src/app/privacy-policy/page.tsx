@@ -2,15 +2,15 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { TrendingUp } from 'lucide-react';
 import Footer from '@/components/footer';
+import { OriangoLogo } from '@/components/oriango-logo';
 
 export default function PrivacyPolicyPage() {
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
         <Link href="/" className="flex items-center justify-center gap-2">
-          <TrendingUp className="h-6 w-6 text-primary" />
+          <OriangoLogo className="h-6 w-6 text-primary" />
           <span className="font-semibold">Oriango</span>
         </Link>
         <nav className="ml-auto flex gap-2">
