@@ -7,13 +7,12 @@ export function OriangoLogo(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
-      strokeWidth="2"
       strokeLinecap="round"
       strokeLinejoin="round"
       {...props}
     >
-      <circle cx="12" cy="12" r="10" />
-      <circle cx="12" cy="12" r="4" />
+      <circle cx="12" cy="12" r="10" strokeWidth="2.5" />
+      <circle cx="12" cy="12" r="3" fill="currentColor" stroke="none" />
     </svg>
   );
 }
