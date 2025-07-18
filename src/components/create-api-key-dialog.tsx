@@ -23,15 +23,14 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { PlusCircle, Loader2, Copy } from 'lucide-react';
-import { useForm, Controller } from 'react-hook-form';
+import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { createApiKeyAction } from '@/app/actions';
-import { Form, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
 
 const availableScopes = [
     { id: 'forms:read', label: 'Read Forms' },
@@ -167,7 +166,7 @@ export default function CreateApiKeyDialog({ onKeyCreated }: CreateApiKeyDialogP
                                     checked={field.value?.includes(item.id)}
                                     onCheckedChange={(checked) => {
                                         return checked
-                                        ? field.onChange([...field.value, item.id])
+                                        ? field.onChange([...(field.value || []), item.id])
                                         : field.onChange(
                                             field.value?.filter(
                                             (value) => value !== item.id
