@@ -1,3 +1,4 @@
+
 export type UserRole = 'user' | 'admin' | 'super-admin';
 
 export type User = {
@@ -86,4 +87,14 @@ export type FormSeries = {
   status: 'active' | 'revoked' | 'frozen';
   created_by: string; // User ID of admin/super-admin
   createdAt: string;
+};
+
+export type ApiKey = {
+    key: string;
+    partnerId: number;
+    scopes: string[]; // e.g., ['forms:read', 'forms:write']
+    enabled: boolean;
+    createdAt: string;
+    lastUsed: string | null;
+    requestCount: number;
 };
