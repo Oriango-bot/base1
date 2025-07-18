@@ -3,11 +3,15 @@
 import clientPromise from '@/lib/mongodb';
 import { v4 as uuidv4 } from 'uuid';
 import type { ApiKey } from '@/lib/types';
+import { ObjectId } from 'mongodb';
+
 
 async function getApiKeyCollection() {
     const client = await clientPromise;
     const db = client.db("oriango");
-    return db.collection<ApiKey>('api_keys');
+    // This assumes your collection is named 'api_keys'.
+    // The type parameter ensures type safety from MongoDB.
+    return db.collection<Omit<ApiKey, 'id'>>('api_keys');
 }
 
 /**
@@ -25,39 +29,25 @@ export async function validateApiKey(key: string): Promise<ApiKey | null> {
       return null;
     }
     
-    // Optional: Implement rate limiting checks here
+    // Atomically increment the request count and update the last used timestamp
+    await apiKeysCollection.updateOne(
+        { _id: apiKeyData._id },
+        { 
+            $inc: { requestCount: 1 },
+            $set: { lastUsed: new Date().toISOString() }
+        }
+    );
     
-    return apiKeyData;
+    // Map the MongoDB document to our application's ApiKey type
+    return mapMongoId(apiKeyData as any) as ApiKey;
   } catch (error) {
     console.error("API Key validation error:", error);
     return null;
   }
 }
 
-/**
- * Creates a new API key for a partner.
- * NOTE: This is a placeholder for a more robust admin interface.
- * @param partnerId The ID of the partner to create the key for.
- * @param scopes The permissions for this key.
- * @returns The newly created ApiKey object.
- */
-export async function createApiKey(partnerId: number, scopes: string[]): Promise<ApiKey> {
-  const apiKeysCollection = await getApiKeyCollection();
-  const newKey: ApiKey = {
-    key: uuidv4(),
-    partnerId,
-    scopes,
-    enabled: true,
-    createdAt: new Date().toISOString(),
-    lastUsed: null,
-    requestCount: 0,
-  };
-
-  await apiKeysCollection.insertOne(newKey);
-  console.log(`Generated new API key for partner ${partnerId}`);
-  
-  return newKey;
+// Utility to map _id to id
+function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
+  const { _id, ...rest } = doc;
+  return { ...rest, id: _id.toString() };
 }
-
-// Example of how you might create a key for a partner (run this manually or via an admin panel)
-// createApiKey(25, ['forms:read', 'forms:write', 'loans:read', 'loans:write']);

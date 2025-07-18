@@ -3,7 +3,7 @@
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
 import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
-import type { Loan, User, UserRole, FormSeries, Repayment, LoanStatus } from '@/lib/types';
+import type { Loan, User, UserRole, FormSeries, Repayment, LoanStatus, ApiKey } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import clientPromise from '@/lib/mongodb';
 import { ObjectId } from 'mongodb';
@@ -734,7 +734,83 @@ export async function createFormSeries(formData: FormData) {
     }
 }
 
-    
+// --- API Key Actions ---
 
-    
+export async function getApiKeys(): Promise<ApiKey[]> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const apiKeys = await db.collection('api_keys').find({}).sort({ createdAt: -1 }).toArray();
+    return apiKeys.map(key => mapMongoId(key as any)) as ApiKey[];
+  } catch (error) {
+    console.error("Failed to get API keys:", error);
+    return [];
+  }
+}
 
+export async function createApiKeyAction(formData: FormData): Promise<{ success: boolean; error: string | null; newKey?: string }> {
+  const partnerName = formData.get('partnerName') as string;
+  const partnerIdStr = formData.get('partnerId') as string;
+  const scopes = formData.getAll('scopes') as string[];
+
+  if (!partnerName || !partnerIdStr || scopes.length === 0) {
+    return { success: false, error: 'Partner name, ID, and at least one scope are required.' };
+  }
+  const partnerId = parseInt(partnerIdStr, 10);
+  if (isNaN(partnerId)) {
+    return { success: false, error: 'Invalid Partner ID.' };
+  }
+
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const apiKeysCollection = db.collection('api_keys');
+
+    const newKeyDoc = {
+      key: `oriango_sk_${uuidv4().replace(/-/g, '')}`, // A more identifiable key format
+      partnerName,
+      partnerId,
+      scopes,
+      enabled: true,
+      createdAt: new Date().toISOString(),
+      lastUsed: null,
+      requestCount: 0,
+    };
+
+    await apiKeysCollection.insertOne(newKeyDoc);
+    
+    return { success: true, error: null, newKey: newKeyDoc.key };
+  } catch (error) {
+    console.error("Failed to create API key:", error);
+    return { success: false, error: 'An unexpected server error occurred.' };
+  }
+}
+
+export async function updateApiKeyStatus(keyId: string, enabled: boolean): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const result = await db.collection('api_keys').updateOne(
+      { _id: new ObjectId(keyId) },
+      { $set: { enabled } }
+    );
+    if (result.modifiedCount === 0) throw new Error("API key not found or status is already the same.");
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Failed to update API key status:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}
+
+export async function deleteApiKey(keyId: string): Promise<{ success: boolean; error: string | null }> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const result = await db.collection('api_keys').deleteOne({ _id: new ObjectId(keyId) });
+    if (result.deletedCount === 0) throw new Error("API key not found.");
+    return { success: true, error: null };
+  } catch (error) {
+    console.error("Failed to delete API key:", error);
+    return { success: false, error: (error as Error).message };
+  }
+}

@@ -16,7 +16,7 @@ import {
   SidebarTrigger,
   SidebarFooter as SidebarFooterComponent,
 } from '@/components/ui/sidebar';
-import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey } from 'lucide-react';
+import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey, KeyRound } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -29,6 +29,7 @@ import {
 import type { User } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import Footer from './footer';
+import { OriangoLogo } from './oriango-logo';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
@@ -90,6 +91,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     { href: '/super-admin/users', label: 'Manage Roles', icon: UserCog, roles: ['super-admin'] },
     { href: '/loans', label: 'All Loans', icon: Landmark, roles: ['admin', 'super-admin'] },
     { href: '/admin/form-series', label: 'Form Series', icon: FileKey, roles: ['admin', 'super-admin'] },
+    { href: '/super-admin/api-keys', label: 'API Keys', icon: KeyRound, roles: ['super-admin'] },
   ];
 
   const userNavItems = navItems.filter(item => item.roles.includes(user.role));
@@ -103,6 +105,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     if (pathname.startsWith('/loans/')) return 'Loan Details';
     if (pathname.startsWith('/loans')) return 'All Loans';
     if (pathname.startsWith('/super-admin/users')) return 'Manage User Roles';
+    if (pathname.startsWith('/super-admin/api-keys')) return 'API Key Management';
     if (pathname.startsWith('/admin/form-series')) return 'Form Series Registry';
     if (pathname.startsWith('/terms-of-service')) return 'Terms of Service';
     if (pathname.startsWith('/privacy-policy')) return 'Privacy Policy';
@@ -119,9 +122,9 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     <SidebarProvider>
       <Sidebar>
         <SidebarHeader className="p-4">
-          <Link href="/" className="flex items-center gap-2.5 text-primary">
-            <Landmark className="h-7 w-7" />
-            <span className="text-xl font-semibold tracking-tighter">Oriango</span>
+          <Link href="/" className="flex items-center gap-2.5">
+            <OriangoLogo className="h-7 w-7 text-primary" />
+            <span className="text-xl font-semibold tracking-tighter text-foreground">Oriango</span>
           </Link>
         </SidebarHeader>
         <SidebarContent>

@@ -7,7 +7,7 @@ import {
 } from "@/components/ui/card";
 import { getDashboardStats } from "@/app/actions";
 import { formatCurrency } from "@/lib/utils";
-import { Landmark, Users, Wallet, HandCoins, UserCog, FileKey } from "lucide-react";
+import { Landmark, Users, Wallet, HandCoins, UserCog, FileKey, KeyRound } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -96,6 +96,12 @@ export default async function SuperAdminDashboard() {
                 <Link href="/super-admin/users">
                     <UserCog className="mr-2"/>
                     Manage User Roles
+                </Link>
+            </Button>
+            <Button asChild>
+                <Link href="/super-admin/api-keys">
+                    <KeyRound className="mr-2"/>
+                    Manage API Keys
                 </Link>
             </Button>
             <Button asChild variant="outline">

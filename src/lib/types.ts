@@ -90,7 +90,9 @@ export type FormSeries = {
 };
 
 export type ApiKey = {
+    id: string;
     key: string;
+    partnerName: string;
     partnerId: number;
     scopes: string[]; // e.g., ['forms:read', 'forms:write']
     enabled: boolean;
