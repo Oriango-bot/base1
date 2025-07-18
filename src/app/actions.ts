@@ -748,6 +748,29 @@ export async function getApiKeys(): Promise<ApiKey[]> {
   }
 }
 
+export async function getNextPartnerId(): Promise<number> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const apiKeysCollection = db.collection('api_keys');
+
+    // Find the partner with the highest ID
+    const lastPartner = await apiKeysCollection.find().sort({ partnerId: -1 }).limit(1).toArray();
+    
+    if (lastPartner.length > 0) {
+      // @ts-ignore
+      return lastPartner[0].partnerId + 1;
+    }
+    
+    // If no partners exist, start with 2 (since 1 is Oriango)
+    return 2;
+  } catch (error) {
+    console.error("Failed to get next partner ID:", error);
+    // Fallback to a high number to avoid collisions on error
+    return 99; 
+  }
+}
+
 export async function createApiKeyAction(formData: FormData): Promise<{ success: boolean; error: string | null; newKey?: string }> {
   const partnerName = formData.get('partnerName') as string;
   const partnerIdStr = formData.get('partnerId') as string;
@@ -765,6 +788,12 @@ export async function createApiKeyAction(formData: FormData): Promise<{ success:
     const client = await clientPromise;
     const db = client.db("oriango");
     const apiKeysCollection = db.collection('api_keys');
+
+    // Check if partner ID already exists
+    const existingKey = await apiKeysCollection.findOne({ partnerId });
+    if (existingKey) {
+        return { success: false, error: `Partner ID ${partnerId} is already in use by ${existingKey.partnerName}.` };
+    }
 
     const newKeyDoc = {
       key: `oriango_sk_${uuidv4().replace(/-/g, '')}`, // A more identifiable key format

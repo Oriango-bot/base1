@@ -11,7 +11,7 @@ import { Trash2, KeyRound } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import type { ApiKey, User } from '@/lib/types';
-import { getApiKeys, updateApiKeyStatus } from '@/app/actions';
+import { getApiKeys, updateApiKeyStatus, getNextPartnerId } from '@/app/actions';
 import { format } from 'date-fns';
 import CreateApiKeyDialog from '@/components/create-api-key-dialog';
 import DeleteApiKeyDialog from '@/components/delete-api-key-dialog';
@@ -19,6 +19,7 @@ import DeleteApiKeyDialog from '@/components/delete-api-key-dialog';
 export default function ApiKeysPage() {
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [nextId, setNextId] = useState<number | null>(null);
     const { toast } = useToast();
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -30,12 +31,20 @@ export default function ApiKeysPage() {
         fetchKeys();
     }, []);
 
-    const fetchKeys = () => {
+    const fetchKeys = async () => {
         setIsLoading(true);
-        getApiKeys().then(data => {
-            setApiKeys(data);
+        try {
+            const [keys, nextPartnerId] = await Promise.all([
+                getApiKeys(),
+                getNextPartnerId(),
+            ]);
+            setApiKeys(keys);
+            setNextId(nextPartnerId);
+        } catch (error) {
+            toast({ variant: 'destructive', title: 'Failed to load data', description: 'Could not fetch API keys and next partner ID.'})
+        } finally {
             setIsLoading(false);
-        });
+        }
     }
 
     const handleStatusChange = async (keyId: string, currentStatus: boolean) => {
@@ -63,7 +72,7 @@ export default function ApiKeysPage() {
                     <CardTitle>API Key Management</CardTitle>
                     <CardDescription>Create, manage, and revoke API keys for external partners.</CardDescription>
                 </div>
-                <CreateApiKeyDialog onKeyCreated={fetchKeys} />
+                {nextId && <CreateApiKeyDialog onKeyCreated={fetchKeys} nextPartnerId={nextId} />}
             </CardHeader>
             <CardContent>
                 <Table>

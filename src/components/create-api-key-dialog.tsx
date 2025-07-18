@@ -51,9 +51,10 @@ type ApiKeyFormValues = z.infer<typeof apiKeySchema>;
 
 interface CreateApiKeyDialogProps {
   onKeyCreated: () => void;
+  nextPartnerId: number;
 }
 
-export default function CreateApiKeyDialog({ onKeyCreated }: CreateApiKeyDialogProps) {
+export default function CreateApiKeyDialog({ onKeyCreated, nextPartnerId }: CreateApiKeyDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [newKey, setNewKey] = useState<string | null>(null);
@@ -63,10 +64,18 @@ export default function CreateApiKeyDialog({ onKeyCreated }: CreateApiKeyDialogP
     resolver: zodResolver(apiKeySchema),
     defaultValues: {
         partnerName: '',
-        // @ts-ignore
-        partnerId: '', // Use empty string instead of undefined
+        partnerId: nextPartnerId,
         scopes: []
     }
+  });
+  
+  // Update default partnerId when the dialog opens or nextPartnerId changes
+  useState(() => {
+    form.reset({
+        partnerName: '',
+        partnerId: nextPartnerId,
+        scopes: []
+    });
   });
 
   const onSubmit = async (data: ApiKeyFormValues) => {
@@ -116,7 +125,7 @@ export default function CreateApiKeyDialog({ onKeyCreated }: CreateApiKeyDialogP
                 <DialogHeader>
                   <DialogTitle>Create New API Key</DialogTitle>
                   <DialogDescription>
-                    Generate a key for a new partner to access the API.
+                    Generate a key for a new partner to access the API. The next available Partner ID has been pre-filled.
                   </DialogDescription>
                 </DialogHeader>
 
