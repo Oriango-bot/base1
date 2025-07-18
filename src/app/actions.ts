@@ -90,7 +90,7 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
     const db = client.db('oriango');
     const user = await db.collection('users').findOne({ email });
 
-    if (!user || !user.password) {
+    if (!user) {
       return { user: null, error: 'Invalid email or password.' };
     }
 
