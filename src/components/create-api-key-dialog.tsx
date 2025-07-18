@@ -63,7 +63,8 @@ export default function CreateApiKeyDialog({ onKeyCreated }: CreateApiKeyDialogP
     resolver: zodResolver(apiKeySchema),
     defaultValues: {
         partnerName: '',
-        partnerId: undefined,
+        // @ts-ignore
+        partnerId: '', // Use empty string instead of undefined
         scopes: []
     }
   });
