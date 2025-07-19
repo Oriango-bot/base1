@@ -10,26 +10,19 @@ import { Switch } from '@/components/ui/switch';
 import { Trash2, KeyRound } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
-import type { ApiKey, User } from '@/lib/types';
+import type { ApiKey } from '@/lib/types';
 import { getApiKeys, updateApiKeyStatus, getNextPartnerId } from '@/app/actions';
 import { format } from 'date-fns';
 import CreateApiKeyDialog from '@/components/create-api-key-dialog';
 import DeleteApiKeyDialog from '@/components/delete-api-key-dialog';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ApiKeysPage() {
+    const { user, loading } = useAuth();
     const [apiKeys, setApiKeys] = useState<ApiKey[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [nextId, setNextId] = useState<number | null>(null);
     const { toast } = useToast();
-    const [currentUser, setCurrentUser] = useState<User | null>(null);
-
-    useEffect(() => {
-        const storedUser = localStorage.getItem('loggedInUser');
-        if (storedUser) {
-          setCurrentUser(JSON.parse(storedUser));
-        }
-        fetchKeys();
-    }, []);
 
     const fetchKeys = async () => {
         setIsLoading(true);
@@ -47,6 +40,12 @@ export default function ApiKeysPage() {
         }
     }
 
+    useEffect(() => {
+        if (!loading && user?.role === 'super-admin') {
+            fetchKeys();
+        }
+    }, [user, loading]);
+
     const handleStatusChange = async (keyId: string, currentStatus: boolean) => {
         const result = await updateApiKeyStatus(keyId, !currentStatus);
         if (result.success) {
@@ -57,7 +56,11 @@ export default function ApiKeysPage() {
         }
     };
     
-    if (currentUser?.role !== 'super-admin') {
+    if (loading) {
+        return <Skeleton className="h-96 w-full" />;
+    }
+
+    if (user?.role !== 'super-admin') {
         return (
             <div className="flex items-center justify-center h-full">
                 <p className="text-destructive">Access Denied. You must be a Super Admin to view this page.</p>
@@ -72,7 +75,7 @@ export default function ApiKeysPage() {
                     <CardTitle>API Key Management</CardTitle>
                     <CardDescription>Create, manage, and revoke API keys for external partners.</CardDescription>
                 </div>
-                {nextId && <CreateApiKeyDialog onKeyCreated={fetchKeys} nextPartnerId={nextId} />}
+                {nextId !== null && <CreateApiKeyDialog onKeyCreated={fetchKeys} nextPartnerId={nextId} />}
             </CardHeader>
             <CardContent>
                 <Table>

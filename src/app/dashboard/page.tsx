@@ -12,27 +12,24 @@ import { calculateOutstandingBalance, formatCurrency } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import Link from "next/link";
-import { ArrowRight, Wallet, Landmark, CheckCircle, Clock, PiggyBank, XCircle } from "lucide-react";
+import { ArrowRight, Wallet, Landmark, CheckCircle, Clock, PiggyBank } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { Loan, User } from "@/lib/types";
-import { Button } from "@/components/ui/button";
+import type { Loan } from "@/lib/types";
 import LoanEligibilityCalculator from "@/components/loan-eligibility-calculator";
 import { Skeleton } from '@/components/ui/skeleton';
 import CreateLoanDialog from "@/components/create-loan-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useAuth } from "@/hooks/use-auth";
 
 export default function Dashboard() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user, loading: authLoading } = useAuth();
   const [userLoans, setUserLoans] = useState<Loan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
+    if (user) {
       setIsLoading(true);
-      getLoansForUser(parsedUser.id)
+      getLoansForUser(user.id)
         .then(loans => {
           setUserLoans(loans.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()));
           setIsLoading(false);
@@ -40,9 +37,9 @@ export default function Dashboard() {
     } else {
         setIsLoading(false);
     }
-  }, []);
+  }, [user]);
 
-  if (isLoading) {
+  if (authLoading || isLoading) {
     return <DashboardSkeleton />;
   }
 

@@ -13,11 +13,13 @@ import { Loader2 } from 'lucide-react';
 import { loginUser } from '@/app/actions';
 import Footer from '@/components/footer';
 import { OriangoLogo } from '@/components/oriango-logo';
+import { useAuth } from '@/hooks/use-auth';
 
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -42,12 +44,12 @@ export default function LoginPage() {
           title: 'Access Denied',
           description: 'This login page is for users only. Please use the admin login page.',
         });
-        localStorage.removeItem('loggedInUser');
+        login(null);
         return;
       }
 
       toast({ title: 'Login Successful', description: `Welcome back, ${user.name}!` });
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      login(user);
       router.push('/dashboard');
     }
   };

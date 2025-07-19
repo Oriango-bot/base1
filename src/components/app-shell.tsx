@@ -1,9 +1,9 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import {
   SidebarProvider,
   Sidebar,
@@ -26,53 +26,24 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { User } from '@/lib/types';
 import { Skeleton } from './ui/skeleton';
 import Footer from './footer';
 import { OriangoLogo } from './oriango-logo';
+import { useAuth } from '@/hooks/use-auth';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const { user, loading, logout } = useAuth();
 
   const publicPages = ['/', '/login', '/signup', '/terms-of-service', '/privacy-policy', '/admin/login', '/admin/signup', '/about', '/forgot-password'];
 
-  useEffect(() => {
-    setLoading(true);
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    } else {
-      setUser(null);
-      if (!publicPages.includes(pathname) && !pathname.startsWith('/admin/signup')) { // Keep this logic for now to avoid loops, signup page has its own logic
-        // But the main fix is in publicPages array
-        if (!publicPages.some(p => pathname.startsWith(p) && p !== '/')) {
-             if(pathname === '/') return;
-             router.push('/login');
-        }
-      }
-    }
-    setLoading(false);
-  }, [pathname, router]);
+  const isPublicPage = publicPages.includes(pathname);
 
-  const handleLogout = () => {
-    const isAdmin = user?.role === 'admin' || user?.role === 'super-admin';
-    localStorage.removeItem('loggedInUser');
-    setUser(null);
-    if (isAdmin) {
-      router.push('/admin/login');
-    } else {
-      router.push('/login');
-    }
-  };
-
-  if (publicPages.includes(pathname) && !user) {
+  if (isPublicPage) {
     return <>{children}</>;
   }
   
-  if (loading || !user) {
+  if (loading) {
      return (
         <div className="flex items-center justify-center h-screen">
           <div className="flex items-center gap-2">
@@ -81,6 +52,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </div>
         </div>
      )
+  }
+
+  if (!user) {
+    return <>{children}</>;
   }
   
   const navItems = [
@@ -115,7 +90,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   }
   
   const isActive = (href: string) => {
-    return pathname === href || (href !== '/' && pathname.startsWith(href));
+    if (href === '/dashboard' || href === '/admin/dashboard' || href === '/super-admin/dashboard') {
+        return pathname === href;
+    }
+    return pathname.startsWith(href);
   }
 
   return (
@@ -144,7 +122,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
          <SidebarFooterComponent>
           <SidebarMenu>
              <SidebarMenuItem>
-                <SidebarMenuButton onClick={handleLogout}>
+                <SidebarMenuButton onClick={logout}>
                     <LogOut />
                     <span>Logout</span>
                 </SidebarMenuButton>
@@ -175,7 +153,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
                 <Link href="/settings">Settings</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={logout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </header>

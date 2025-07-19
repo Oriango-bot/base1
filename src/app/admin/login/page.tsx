@@ -13,11 +13,13 @@ import { ShieldCheck } from 'lucide-react';
 import { Loader2 } from 'lucide-react';
 import { loginUser, isSuperAdminPresent } from '@/app/actions';
 import Footer from '@/components/footer';
+import { useAuth } from '@/hooks/use-auth';
 
 
 export default function AdminLoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [showSignupLink, setShowSignupLink] = useState(false);
 
@@ -51,12 +53,12 @@ export default function AdminLoginPage() {
           title: 'Access Denied',
           description: 'You do not have administrative privileges.',
         });
-        localStorage.removeItem('loggedInUser');
+        login(null);
         return;
       }
       
       toast({ title: 'Admin Login Successful', description: `Welcome back, ${user.name}!` });
-      localStorage.setItem('loggedInUser', JSON.stringify(user));
+      login(user);
 
       if (user.role === 'super-admin') {
         router.push('/super-admin/dashboard');

@@ -140,8 +140,8 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
       return { user: null, error: 'An account with this email already exists.' };
     }
 
-    const isSuperAdminPresent = await usersCollection.findOne({ role: 'super-admin' });
-    const role: UserRole = isSuperAdminPresent ? 'user' : 'super-admin';
+    const isSuperAdminPresentValue = await isSuperAdminPresent();
+    const role: UserRole = isSuperAdminPresentValue ? 'user' : 'super-admin';
 
     const hashedPassword = await bcrypt.hash(password, 10);
     

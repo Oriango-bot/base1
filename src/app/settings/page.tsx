@@ -1,32 +1,23 @@
 
 'use client';
 
-import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, Construction } from 'lucide-react';
-import type { User } from '@/lib/types';
+import { useAuth } from '@/hooks/use-auth';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function SettingsPage() {
-    const [user, setUser] = useState<User | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
+    const { user, loading } = useAuth();
     const router = useRouter();
 
-    useEffect(() => {
-        const storedUser = localStorage.getItem('loggedInUser');
-        if (storedUser) {
-        setUser(JSON.parse(storedUser));
-        }
-        setIsLoading(false);
-    }, []);
-
-    if (isLoading) {
-        return <div>Loading...</div>;
+    if (loading) {
+        return <Skeleton className="h-64 w-full" />;
     }
     
     if (!user) {
-        router.push('/login');
+        // AuthProvider will redirect
         return null;
     }
 

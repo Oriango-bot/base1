@@ -17,25 +17,23 @@ import { Badge } from '@/components/ui/badge';
 import { updateUserRole, getUsers } from '@/app/actions';
 import { Skeleton } from '@/components/ui/skeleton';
 import ResetPasswordDialog from '@/components/reset-password-dialog';
+import { useAuth } from '@/hooks/use-auth';
 
 export default function ManageUsersPage() {
+  const { user: currentUser, loading: authLoading } = useAuth();
   const [users, setUsers] = useState<User[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-      setCurrentUser(JSON.parse(storedUser));
+    if (!authLoading && currentUser) {
+        setIsLoading(true);
+        getUsers().then(fetchedUsers => {
+          setUsers(fetchedUsers);
+          setIsLoading(false);
+        });
     }
-    
-    setIsLoading(true);
-    getUsers().then(fetchedUsers => {
-      setUsers(fetchedUsers);
-      setIsLoading(false);
-    });
-  }, []);
+  }, [currentUser, authLoading]);
 
   const handleRoleChange = async (userId: string, newRole: UserRole) => {
     if (currentUser?.id === userId) {
@@ -78,6 +76,24 @@ export default function ManageUsersPage() {
     }
   };
 
+  if (authLoading || isLoading) {
+    return (
+        <Card>
+            <CardHeader>
+                <Skeleton className="h-7 w-1/3" />
+                <Skeleton className="h-4 w-2/3" />
+            </CardHeader>
+            <CardContent>
+                <div className="space-y-2">
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                    <Skeleton className="h-10 w-full" />
+                </div>
+            </CardContent>
+        </Card>
+    )
+  }
+
   if (currentUser?.role !== 'super-admin') {
     return (
         <div className="flex items-center justify-center h-full">
@@ -103,23 +119,7 @@ export default function ManageUsersPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {isLoading ? (
-                <>
-                    <TableRow>
-                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-48" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-full" /></TableCell>
-                    </TableRow>
-                    <TableRow>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-40" /></TableCell>
-                        <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-full" /></TableCell>
-                    </TableRow>
-                </>
-            ) : (
-                users.map((user) => (
+                {users.map((user) => (
                 <TableRow key={user.id}>
                     <TableCell className="font-medium">{user.name}</TableCell>
                     <TableCell className="text-muted-foreground">{user.email}</TableCell>
@@ -150,8 +150,7 @@ export default function ManageUsersPage() {
                     </Select>
                     </TableCell>
                 </TableRow>
-                ))
-            )}
+                ))}
           </TableBody>
         </Table>
       </CardContent>
