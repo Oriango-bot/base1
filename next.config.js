@@ -23,20 +23,6 @@ const nextConfig = {
       },
     ],
   },
-  webpack: (config, { isServer }) => {
-    // This is a workaround for a build issue with Genkit and its dependencies.
-    // These packages are not meant to be bundled by webpack for the server.
-    if (isServer) {
-      config.externals = [
-        ...config.externals,
-        'handlebars',
-        '@opentelemetry/api',
-        '@opentelemetry/sdk-trace-base',
-      ];
-    }
-
-    return config;
-  },
 };
 
 module.exports = nextConfig;
