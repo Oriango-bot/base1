@@ -3,6 +3,7 @@
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
 import { calculateLoanEligibility, type LoanEligibilityInput } from '@/ai/flows/loan-eligibility-flow';
+import { generatePasswordResetEmail } from '@/ai/flows/generate-password-reset-email-flow';
 import type { Loan, User, UserRole, FormSeries, Repayment, LoanStatus, ApiKey } from '@/lib/types';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import clientPromise from '@/lib/mongodb';
@@ -259,11 +260,11 @@ export async function updateUserRole(userId: string, newRole: UserRole) {
 }
 
 
-export async function requestPasswordReset(formData: FormData): Promise<{ tempPass: string | null; message: string | null; error: string | null }> {
+export async function requestPasswordReset(formData: FormData): Promise<{ success: boolean; message: string; }> {
   const email = formData.get('email') as string;
 
   if (!email) {
-    return { tempPass: null, message: null, error: 'Email is required.' };
+    return { success: false, message: 'Email is required.' };
   }
 
   try {
@@ -273,9 +274,10 @@ export async function requestPasswordReset(formData: FormData): Promise<{ tempPa
 
     const user = await usersCollection.findOne({ email });
 
+    // For security, don't reveal if the user exists.
+    // Always return a generic success message.
     if (!user) {
-      // Don't reveal if user exists or not for security
-      return { tempPass: null, message: 'If an account with that email exists, a password reset has been initiated.', error: null };
+      return { success: true, message: 'If an account with that email exists, a password reset link has been sent.' };
     }
     
     const tempPassword = randomBytes(8).toString('hex').slice(0, 8);
@@ -286,10 +288,30 @@ export async function requestPasswordReset(formData: FormData): Promise<{ tempPa
       { $set: { password: hashedPassword } }
     );
     
-    return { tempPass: tempPassword, message: 'A temporary password has been generated.', error: null };
+    // Simulate sending email. A real implementation would use an email service.
+    try {
+      const emailContent = await generatePasswordResetEmail({
+        userName: user.name,
+        tempPassword: tempPassword,
+      });
+      // In a real app, you would use a service like Nodemailer, SendGrid, etc.
+      // to send the email with emailContent.subject and emailContent.body
+      console.log('--- SIMULATING EMAIL SEND ---');
+      console.log(`To: ${user.email}`);
+      console.log(`Subject: ${emailContent.subject}`);
+      console.log(`Body: ${emailContent.body}`);
+      console.log('-----------------------------');
+    } catch (emailError) {
+        console.error("Failed to generate or simulate sending password reset email:", emailError);
+        // Even if email fails, don't block the user. The password has been reset.
+        // They may need to contact support if they don't receive it.
+    }
+    
+    return { success: true, message: 'If an account with that email exists, you will receive an email with a temporary password.' };
   } catch (e) {
     console.error("Error in requestPasswordReset action: ", e);
-    return { tempPass: null, message: null, error: 'An unexpected error occurred.' };
+    // Return a generic error to the user
+    return { success: false, message: 'An unexpected error occurred. Please try again or contact support.' };
   }
 }
 

@@ -12,23 +12,12 @@ import Link from 'next/link';
 import { KeySquare, Loader2 } from 'lucide-react';
 import { requestPasswordReset } from '@/app/actions';
 import Footer from '@/components/footer';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 import { Skeleton } from '@/components/ui/skeleton';
 
 
 function ForgotPasswordForm() {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [dialogContent, setDialogContent] = useState({ title: '', description: '' });
   const searchParams = useSearchParams();
   const loginPath = searchParams.get('from') === 'admin' ? '/admin/login' : '/login';
 
@@ -38,27 +27,21 @@ function ForgotPasswordForm() {
     setIsLoading(true);
 
     const formData = new FormData(e.currentTarget);
-    const { tempPass, message, error } = await requestPasswordReset(formData);
+    const { success, message } = await requestPasswordReset(formData);
     
     setIsLoading(false);
 
-    if (error) {
+    if (success) {
+      toast({
+        title: 'Request Received',
+        description: message,
+      });
+    } else {
       toast({
         variant: 'destructive',
         title: 'Reset Failed',
-        description: error,
+        description: message,
       });
-    } else if (tempPass) {
-      setDialogContent({
-        title: 'Temporary Password Generated',
-        description: `Your temporary password is: ${tempPass}\n\nPlease use it to log in and change your password immediately.`,
-      });
-      setDialogOpen(true);
-    } else if (message) {
-        toast({
-            title: 'Request Received',
-            description: message,
-        })
     }
   };
 
@@ -101,19 +84,6 @@ function ForgotPasswordForm() {
         </Card>
       </main>
       <Footer />
-       <AlertDialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>{dialogContent.title}</AlertDialogTitle>
-            <AlertDialogDescription className="whitespace-pre-wrap">
-              {dialogContent.description}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction onClick={() => setDialogOpen(false)}>Close</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
