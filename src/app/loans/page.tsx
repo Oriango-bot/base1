@@ -21,10 +21,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { Loan, LoanStatus } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
 
-type LoanWithBorrower = Loan & { borrowerName: string };
+type LoanWithDetails = Loan & { borrowerName: string; partnerName: string };
 
 export default function LoansPage() {
-  const [loans, setLoans] = useState<LoanWithBorrower[]>([]);
+  const [loans, setLoans] = useState<LoanWithDetails[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -34,7 +34,7 @@ export default function LoansPage() {
     });
   }, []);
 
-  const renderLoansTable = (loanList: LoanWithBorrower[]) => {
+  const renderLoansTable = (loanList: LoanWithDetails[]) => {
     if (isLoading) {
         return (
              <div className="space-y-2 pt-4">
@@ -54,7 +54,7 @@ export default function LoansPage() {
             <TableHeader>
                 <TableRow>
                 <TableHead>Borrower</TableHead>
-                <TableHead>Form Number</TableHead>
+                <TableHead>Partner</TableHead>
                 <TableHead>Amount</TableHead>
                 <TableHead className="hidden md:table-cell">Outstanding</TableHead>
                 <TableHead>
@@ -68,7 +68,7 @@ export default function LoansPage() {
                 return (
                     <TableRow key={loan.id}>
                     <TableCell className="font-medium">{loan.borrowerName}</TableCell>
-                    <TableCell className="font-mono text-muted-foreground">{loan.formNumber}</TableCell>
+                    <TableCell>{loan.partnerName}</TableCell>
                     <TableCell>{formatCurrency(loan.amount)}</TableCell>
                     <TableCell className="hidden md:table-cell">{formatCurrency(outstanding)}</TableCell>
                     <TableCell className="text-right">

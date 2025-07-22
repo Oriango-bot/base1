@@ -42,31 +42,31 @@ export type Loan = {
   statusHistory: StatusHistoryEntry[];
   
   // NEW FIELDS FROM FORM
-  idNumber?: string;
-  dob?: string;
-  nextOfKinName?: string;
-  nextOfKinRelationship?: string;
-  nextOfKinContact?: string;
+  idNumber: string;
+  dob: string;
+  nextOfKinName: string;
+  nextOfKinRelationship: string;
+  nextOfKinContact: string;
 
-  occupation?: string;
-  employerName?: string;
-  workLocation?: string;
-  workLandmark?: string;
-  monthlyIncome?: number;
-  sourceOfIncome?: string; // 'salary', 'business', 'farming', 'other'
+  occupation: string;
+  employerName: string;
+  workLocation: string;
+  workLandmark: string;
+  monthlyIncome: number;
+  sourceOfIncome: string; // 'salary', 'business', 'farming', 'other'
   sourceOfIncomeOther?: string;
 
-  productType?: string; // 'biz-flex', 'hustle-flex', 'rent-flex'
-  loanPurpose?: string[]; // ['stock', 'rent', etc.]
+  productType: string; // 'biz-flex', 'hustle-flex', 'rent-flex'
+  loanPurpose: string[]; // ['stock', 'rent', etc.]
   loanPurposeOther?: string;
-  processingFee?: number;
+  processingFee: number;
   
-  hasCollateral?: boolean;
+  hasCollateral: boolean;
   collateral?: { description: string }[];
   collateralValue?: number;
-  guarantors?: { name: string; idNumber: string; phone: string; }[];
+  guarantors: { name: string; idNumber: string; phone: string; }[];
   
-  attachments?: {
+  attachments: {
     idCopy: boolean;
     incomeProof: boolean;
     guarantorIdCopies: boolean;
@@ -74,8 +74,8 @@ export type Loan = {
     passportPhoto: boolean;
   };
   
-  declarationSignature?: string; // just applicant name for now
-  declarationDate?: string;
+  declarationSignature: string; // just applicant name for now
+  declarationDate: string;
 };
 
 export type FormSeries = {

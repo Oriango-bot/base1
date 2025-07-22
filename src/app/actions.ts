@@ -346,19 +346,13 @@ export async function createLoan(formData: FormData) {
     const db = client.db("oriango");
     const loansCollection = db.collection('loans');
     
-    const creator = await db.collection('users').findOne({ _id: new ObjectId(createdBy) });
-    if (!creator) {
-        return { success: false, error: 'Loan creator not found.' };
-    }
-    // @ts-ignore
-    const partnerId = creator.partnerId;
-    
     // Generate a unique form number
     let formNumber: string;
     let isUnique = false;
     while (!isUnique) {
         const uniquePart = randomBytes(4).toString('hex').toUpperCase();
-        formNumber = `P-25-MLD-GEN-${uniquePart}`;
+        // Assuming Oriango's partner ID is 1
+        formNumber = `P-1-MLD-GEN-${uniquePart}`; 
         const existingLoan = await loansCollection.findOne({ formNumber });
         if (!existingLoan) {
             isUnique = true;
@@ -369,7 +363,7 @@ export async function createLoan(formData: FormData) {
     const interestRate = 15; // Standard 15% flat rate
     const processingFee = amount * 0.025; // 2.5% processing fee
 
-    const newLoanDoc: Partial<Loan> = {
+    const newLoanDoc: Omit<Loan, 'id'> = {
       borrowerId,
       formNumber,
       // Core fields
@@ -397,7 +391,7 @@ export async function createLoan(formData: FormData) {
       processingFee,
       // Security
       hasCollateral: formData.get('hasCollateral') === 'true',
-      guarantors: [],
+      guarantors: [], // Simplified for now
       // Attachments & Declaration
       attachments: {
         idCopy: formData.get('attachments_idCopy') === 'true',
@@ -413,7 +407,7 @@ export async function createLoan(formData: FormData) {
       status: 'pending' as LoanStatus,
       statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
       repayments: [],
-      partnerId,
+      partnerId: 1, // Default all new applications to Oriango
       createdBy,
     };
 
@@ -489,7 +483,7 @@ export async function getLoansForUser(userId: string): Promise<Loan[]> {
     }
 }
 
-export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerName: string })[]> {
+export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerName: string, partnerName: string })[]> {
     try {
         const client = await clientPromise;
         const db = client.db("oriango");
@@ -511,18 +505,34 @@ export async function getLoansWithBorrowerDetails(): Promise<(Loan & { borrowerN
                 }
             },
             {
+                $lookup: {
+                    from: "api_keys",
+                    localField: "partnerId",
+                    foreignField: "partnerId",
+                    as: "partnerInfo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$partnerInfo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
                 $addFields: {
-                    borrowerName: { $ifNull: [ "$borrowerInfo.name", "Unknown" ] }
+                    borrowerName: { $ifNull: [ "$borrowerInfo.name", "Unknown" ] },
+                    partnerName: { $ifNull: [ "$partnerInfo.partnerName", "Oriango" ] }
                 }
             },
             {
                 $project: {
-                    borrowerInfo: 0
+                    borrowerInfo: 0,
+                    partnerInfo: 0,
                 }
             }
         ]).sort({ issueDate: -1 }).toArray();
 
-        return loans.map(loan => mapMongoId(loan as any)) as (Loan & { borrowerName: string })[];
+        return loans.map(loan => mapMongoId(loan as any)) as (Loan & { borrowerName: string, partnerName: string })[];
     } catch (error) {
         console.error("Failed to get loans with borrower details:", error);
         return [];
@@ -683,12 +693,37 @@ export async function getDashboardStats() {
 
 // --- Form Series Actions ---
 
-export async function getFormSeries() {
+export async function getFormSeries(): Promise<(FormSeries & { partnerName: string })[]> {
     try {
         const client = await clientPromise;
         const db = client.db("oriango");
-        const series = await db.collection('form_series_register').find({}).toArray();
-        return series.map(s => mapMongoId(s as any)) as FormSeries[];
+        const series = await db.collection('form_series_register').aggregate([
+            {
+                $lookup: {
+                    from: "api_keys", // Assuming partner names are in api_keys collection
+                    localField: "partner_id",
+                    foreignField: "partnerId",
+                    as: "partnerInfo"
+                }
+            },
+            {
+                $unwind: {
+                    path: "$partnerInfo",
+                    preserveNullAndEmptyArrays: true
+                }
+            },
+            {
+                $addFields: {
+                    partnerName: { $ifNull: ["$partnerInfo.partnerName", "Oriango"] }
+                }
+            },
+            {
+                $project: {
+                    partnerInfo: 0
+                }
+            }
+        ]).toArray();
+        return series.map(s => mapMongoId(s as any)) as (FormSeries & { partnerName: string })[];
     } catch (error) {
         console.error("Failed to get form series:", error);
         return [];

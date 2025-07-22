@@ -16,8 +16,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { FormSeries, User } from '@/lib/types';
 import AddFormSeriesDialog from '@/components/add-form-series-dialog';
 
+type FormSeriesWithPartner = FormSeries & { partnerName: string };
+
 export default function FormSeriesPage() {
-    const [series, setSeries] = useState<FormSeries[]>([]);
+    const [series, setSeries] = useState<FormSeriesWithPartner[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
@@ -54,7 +56,7 @@ export default function FormSeriesPage() {
                 <Table>
                     <TableHeader>
                         <TableRow>
-                            <TableHead>Partner ID</TableHead>
+                            <TableHead>Partner</TableHead>
                             <TableHead>Prefix</TableHead>
                             <TableHead>Range</TableHead>
                             <TableHead>Status</TableHead>
@@ -77,7 +79,7 @@ export default function FormSeriesPage() {
                         ) : series.length > 0 ? (
                             series.map((s) => (
                                 <TableRow key={s.id}>
-                                    <TableCell className="font-semibold">{s.partner_id}</TableCell>
+                                    <TableCell className="font-semibold">{s.partnerName} ({s.partner_id})</TableCell>
                                     <TableCell className="font-mono text-muted-foreground">{s.prefix}</TableCell>
                                     <TableCell className="font-mono text-muted-foreground">{s.start_number} - {s.end_number}</TableCell>
                                     <TableCell>
