@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,8 +20,9 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { createFormSeries } from '@/app/actions';
+import { createFormSeries, getNextPartnerId } from '@/app/actions';
 import type { User } from '@/lib/types';
+import { Skeleton } from './ui/skeleton';
 
 const seriesSchema = z.object({
   prefix: z.string().min(1, 'Prefix is required'),
@@ -41,7 +43,18 @@ interface AddFormSeriesDialogProps {
 export default function AddFormSeriesDialog({ onSeriesAdded }: AddFormSeriesDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isFetchingId, setIsFetchingId] = useState(false);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+    setValue,
+  } = useForm<SeriesFormValues>({
+    resolver: zodResolver(seriesSchema),
+  });
 
   useEffect(() => {
     const storedUser = localStorage.getItem('loggedInUser');
@@ -50,14 +63,19 @@ export default function AddFormSeriesDialog({ onSeriesAdded }: AddFormSeriesDial
     }
   }, []);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    reset,
-  } = useForm<SeriesFormValues>({
-    resolver: zodResolver(seriesSchema),
-  });
+  useEffect(() => {
+    if (open) {
+      setIsFetchingId(true);
+      getNextPartnerId()
+        .then(id => {
+          setValue('partner_id', id);
+        })
+        .catch(() => {
+          toast({ variant: 'destructive', title: 'Error', description: 'Could not fetch the next partner ID.' });
+        })
+        .finally(() => setIsFetchingId(false));
+    }
+  }, [open, setValue]);
 
   const onSubmit = async (data: SeriesFormValues) => {
     if (!currentUser) {
@@ -106,7 +124,7 @@ export default function AddFormSeriesDialog({ onSeriesAdded }: AddFormSeriesDial
           <DialogHeader>
             <DialogTitle>Add New Form Series</DialogTitle>
             <DialogDescription>
-              Define a new validation rule for form numbers.
+              Define a new validation rule for form numbers. The partner ID is auto-generated.
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
@@ -120,7 +138,9 @@ export default function AddFormSeriesDialog({ onSeriesAdded }: AddFormSeriesDial
              <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="partner_id" className="text-right">Partner ID</Label>
               <div className="col-span-3">
-                <Input id="partner_id" type="number" {...register('partner_id')} disabled={isLoading} />
+                {isFetchingId ? <Skeleton className="h-10 w-full" /> : 
+                    <Input id="partner_id" type="number" {...register('partner_id')} disabled={true} />
+                }
                 {errors.partner_id && <p className="text-destructive text-xs mt-1">{errors.partner_id.message}</p>}
               </div>
             </div>
