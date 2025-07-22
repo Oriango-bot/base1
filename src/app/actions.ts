@@ -278,9 +278,6 @@ export async function requestPasswordReset(formData: FormData): Promise<{ tempPa
       return { tempPass: null, message: 'If an account with that email exists, a password reset has been initiated.', error: null };
     }
     
-    // In a real app, you'd generate a secure token and email a link.
-    // For this prototype, we generate a temporary password and return it.
-    // THIS IS NOT SECURE FOR PRODUCTION.
     const tempPassword = randomBytes(8).toString('hex').slice(0, 8);
     const hashedPassword = await bcrypt.hash(tempPassword, 10);
 

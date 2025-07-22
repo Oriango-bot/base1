@@ -80,9 +80,6 @@ export async function POST(req: NextRequest) {
 
     const { partner_id, region_code, form_type } = validation.data;
     
-    // In a real implementation, you would check `form_series_register`
-    // to validate against predefined ranges. For now, we generate a unique number.
-
     const client = await clientPromise;
     const db = client.db("oriango");
     const loansCollection = db.collection('loans');
@@ -104,12 +101,8 @@ export async function POST(req: NextRequest) {
     }
 
     if (!isUnique) {
-        // Fallback or error after multiple collisions
         return NextResponse.json({ error: 'Failed to generate a unique form number after multiple attempts.' }, { status: 500 });
     }
-
-    // You might want to reserve this number in a temporary collection
-    // until the full application is submitted.
 
     // @ts-ignore
     return NextResponse.json({ formNumber }, { status: 200 });

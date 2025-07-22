@@ -49,8 +49,6 @@ function ForgotPasswordForm() {
         description: error,
       });
     } else if (tempPass) {
-      // In a real app, this password would be emailed.
-      // Here, we show it in a dialog for the prototype user.
       setDialogContent({
         title: 'Temporary Password Generated',
         description: `Your temporary password is: ${tempPass}\n\nPlease use it to log in and change your password immediately.`,
