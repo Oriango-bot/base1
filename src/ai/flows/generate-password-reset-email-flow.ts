@@ -10,13 +10,13 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
-export const GeneratePasswordResetEmailInputSchema = z.object({
+const GeneratePasswordResetEmailInputSchema = z.object({
   userName: z.string().describe("The name of the user who requested the password reset."),
   tempPassword: z.string().describe("The temporary password that was generated for the user."),
 });
 export type GeneratePasswordResetEmailInput = z.infer<typeof GeneratePasswordResetEmailInputSchema>;
 
-export const GeneratePasswordResetEmailOutputSchema = z.object({
+const GeneratePasswordResetEmailOutputSchema = z.object({
   subject: z.string().describe("The subject line for the password reset email."),
   body: z.string().describe("The HTML body of the password reset email."),
 });
