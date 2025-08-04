@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -69,6 +70,14 @@ const loanSchema = z.object({
   attachments_businessLicense: z.boolean().default(false),
   attachments_passportPhoto: z.boolean().default(false),
   declarationSignature: z.string().min(1, "Signature is required to agree to terms."),
+}).refine(data => {
+    if (data.hasCollateral) {
+        return !!data.collateral1 && (data.collateralValue || 0) > 0;
+    }
+    return true;
+}, {
+    message: "Collateral description and value are required if you are providing collateral.",
+    path: ["collateral1"], // You can point to a specific field.
 });
 
 type LoanFormValues = z.infer<typeof loanSchema>;
@@ -159,7 +168,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome'];
     if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule'];
-    if (step === 4) fields = ['hasCollateral'];
+    if (step === 4) fields = ['hasCollateral', 'collateral1', 'collateralValue'];
     
     const isValid = await trigger(fields);
     if (isValid) {
@@ -283,6 +292,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                           <Checkbox id="hasCollateral" {...register('hasCollateral')} />
                           <Label htmlFor="hasCollateral">Are you providing collateral?</Label>
                       </div>
+                       {errors.collateral1 && <p className="text-destructive text-xs mt-1">{errors.collateral1.message}</p>}
                       <div className="grid grid-cols-2 gap-4">
                           <div><Label>Collateral 1</Label><Input {...register('collateral1')} /></div>
                           <div><Label>Collateral 2</Label><Input {...register('collateral2')} /></div>
@@ -334,3 +344,5 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     </Dialog>
   );
 }
+
+    

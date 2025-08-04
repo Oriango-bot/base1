@@ -382,6 +382,19 @@ export async function createLoan(formData: FormData) {
     const interestRate = 15; // Standard 15% flat rate
     const processingFee = amount * 0.025; // 2.5% processing fee
 
+    // Construct guarantors array
+    const guarantors = [];
+    const guarantor1Name = formData.get('guarantor1Name') as string;
+    const guarantor1Id = formData.get('guarantor1Id') as string;
+    const guarantor1Phone = formData.get('guarantor1Phone') as string;
+    if (guarantor1Name && guarantor1Id && guarantor1Phone) {
+        guarantors.push({
+            name: guarantor1Name,
+            idNumber: guarantor1Id,
+            phone: guarantor1Phone,
+        });
+    }
+
     const newLoanDoc: Omit<Loan, 'id'> = {
       borrowerId,
       formNumber,
@@ -410,7 +423,7 @@ export async function createLoan(formData: FormData) {
       processingFee,
       // Security
       hasCollateral: formData.get('hasCollateral') === 'true',
-      guarantors: [], // Simplified for now
+      guarantors,
       // Attachments & Declaration
       attachments: {
         idCopy: formData.get('attachments_idCopy') === 'true',
@@ -897,3 +910,5 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
     return { success: false, error: (error as Error).message };
   }
 }
+
+    
