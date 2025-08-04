@@ -64,7 +64,9 @@ const loanSchema = z.object({
   guarantor1Phone: z.string().optional(),
 
   // Step 5
-  attachments_idCopy: z.boolean().default(false),
+  attachments_idCopy: z.literal(true, {
+    errorMap: () => ({ message: "You must confirm you have a copy of your ID." }),
+  }),
   attachments_incomeProof: z.boolean().default(false),
   attachments_guarantorIdCopies: z.boolean().default(false),
   attachments_businessLicense: z.boolean().default(false),
@@ -145,10 +147,10 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     const result = await createLoan(formData);
     setIsLoading(false);
 
-    if (result.success) {
+    if (result.success && result.loanId) {
       toast({
         title: 'Loan Application Submitted',
-        description: `Your application is now pending review.`,
+        description: `Your application (ID: ${result.loanId.slice(-6)}) is now pending review.`,
       });
       form.reset();
       setStep(1);
@@ -168,7 +170,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome'];
     if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule'];
-    if (step === 4) fields = ['hasCollateral', 'collateral1', 'collateralValue'];
+    if (step === 4) fields = ['hasCollateral', 'collateral1', 'collateralValue', 'guarantor1Name', 'guarantor1Id', 'guarantor1Phone'];
     
     const isValid = await trigger(fields);
     if (isValid) {
@@ -289,7 +291,9 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                   <section className="space-y-4">
                       <h3 className="font-semibold">4. Security / Guarantors</h3>
                       <div className="flex items-center space-x-2">
-                          <Checkbox id="hasCollateral" {...register('hasCollateral')} />
+                          <Controller name="hasCollateral" control={control} render={({field}) => (
+                              <Checkbox id="hasCollateral" checked={field.value} onCheckedChange={field.onChange} />
+                          )} />
                           <Label htmlFor="hasCollateral">Are you providing collateral?</Label>
                       </div>
                        {errors.collateral1 && <p className="text-destructive text-xs mt-1">{errors.collateral1.message}</p>}
@@ -310,9 +314,13 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                {step === 5 && (
                   <section className="space-y-4">
                       <h3 className="font-semibold">5. Required Attachments & Declaration</h3>
-                      <p className="text-sm text-muted-foreground">Please confirm you have the following documents ready. You will be asked to provide them upon request.</p>
+                      <p className="text-sm text-muted-foreground">Please confirm you have the following documents ready. You will be asked to provide them upon request. This does not upload the files.</p>
                        <div className="space-y-2">
-                          <div className="flex items-center space-x-2"><Checkbox id="attachments_idCopy" {...register('attachments_idCopy')} /><Label htmlFor="attachments_idCopy">Copy of ID</Label></div>
+                          <FormField control={control} name="attachments_idCopy" render={({field}) => (
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label htmlFor="attachments_idCopy">Copy of ID (Required)</Label></FormItem>
+                          )} />
+                          {errors.attachments_idCopy && <p className="text-destructive text-xs mt-1">{errors.attachments_idCopy.message}</p>}
+
                           <div className="flex items-center space-x-2"><Checkbox id="attachments_incomeProof" {...register('attachments_incomeProof')} /><Label htmlFor="attachments_incomeProof">Proof of Income</Label></div>
                           <div className="flex items-center space-x-2"><Checkbox id="attachments_guarantorIdCopies" {...register('attachments_guarantorIdCopies')} /><Label htmlFor="attachments_guarantorIdCopies">Guarantor ID Copies</Label></div>
                           <div className="flex items-center space-x-2"><Checkbox id="attachments_businessLicense" {...register('attachments_businessLicense')} /><Label htmlFor="attachments_businessLicense">Business License (if applicable)</Label></div>
@@ -344,5 +352,3 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     </Dialog>
   );
 }
-
-    
