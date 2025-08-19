@@ -394,6 +394,8 @@ export async function createLoan(formData: FormData) {
             phone: guarantor1Phone,
         });
     }
+    
+    const getBool = (key: string) => formData.get(key) === 'true';
 
     const newLoanDoc: Omit<Loan, 'id'> = {
       borrowerId,
@@ -415,22 +417,28 @@ export async function createLoan(formData: FormData) {
       workLandmark: formData.get('workLandmark') as string,
       monthlyIncome: parseFloat(formData.get('monthlyIncome') as string),
       sourceOfIncome: formData.get('sourceOfIncome') as string,
-      sourceOfIncomeOther: formData.get('sourceOfIncomeOther') as string,
+      sourceOfIncomeOther: formData.get('sourceOfIncomeOther') as string || undefined,
       // Loan Details
       productType: formData.get('productType') as string,
       loanPurpose: formData.getAll('loanPurpose') as string[],
-      loanPurposeOther: formData.get('loanPurposeOther') as string,
+      loanPurposeOther: formData.get('loanPurposeOther') as string || undefined,
       processingFee,
       // Security
-      hasCollateral: formData.get('hasCollateral') === 'true',
+      hasCollateral: getBool('hasCollateral'),
+      collateral: [
+          { description: formData.get('collateral1') as string },
+          { description: formData.get('collateral2') as string },
+          { description: formData.get('collateral3') as string },
+      ].filter(c => c.description),
+      collateralValue: parseFloat(formData.get('collateralValue') as string) || undefined,
       guarantors,
       // Attachments & Declaration
       attachments: {
-        idCopy: formData.get('attachments_idCopy') === 'true',
-        incomeProof: formData.get('attachments_incomeProof') === 'true',
-        guarantorIdCopies: formData.get('attachments_guarantorIdCopies') === 'true',
-        businessLicense: formData.get('attachments_businessLicense') === 'true',
-        passportPhoto: formData.get('attachments_passportPhoto') === 'true',
+        idCopy: getBool('attachments_idCopy'),
+        incomeProof: getBool('attachments_incomeProof'),
+        guarantorIdCopies: getBool('attachments_guarantorIdCopies'),
+        businessLicense: getBool('attachments_businessLicense'),
+        passportPhoto: getBool('attachments_passportPhoto'),
       },
       declarationSignature: formData.get('declarationSignature') as string,
       declarationDate: new Date().toISOString(),
