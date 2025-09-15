@@ -124,7 +124,7 @@ export default function HomePage() {
     // Set up a loop to repeat the notifications
     const loopTimer = setInterval(() => {
         startNotificationSequence();
-    }, (notifications.length * 4000) + 10000); // Repeat after the full cycle + extra delay
+    }, (notifications.length * 4000) + 15000); // Repeat after the full cycle + 15 second delay
 
     // Cleanup on component unmount
     return () => {
