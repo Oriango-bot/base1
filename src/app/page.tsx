@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu, Users, Building } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu, Users, Building, Lock, FileBadge, Handshake } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -36,13 +36,42 @@ export default function HomePage() {
       },
       {
         title: "How It Works",
-        description: "Get funded in three simple steps.",
+        description: "Get funded in three simple steps: Apply, Get Approved, Receive Funds.",
         icon: <CheckCircle className="text-green-500" />,
+        action: <ToastAction altText="How It Works" asChild><Link href="/#how-it-works">See Steps</Link></ToastAction>
       },
       {
         title: "AI-Powered Eligibility",
         description: "Check your loan eligibility instantly before you apply.",
         icon: <Cpu className="text-accent" />,
+         action: <ToastAction altText="Calculator" asChild><Link href="/#calculator">Try It Now</Link></ToastAction>
+      },
+      {
+        title: "Your Security Matters",
+        description: "We use top-tier security to protect your personal data.",
+        icon: <Lock className="text-yellow-500" />,
+      },
+      {
+        title: "Terms of Service",
+        description: "Understand our commitment to you by reading our terms.",
+        icon: <FileBadge className="text-gray-500" />,
+        action: <ToastAction altText="Terms" asChild><Link href="/terms-of-service">Read Terms</Link></ToastAction>
+      },
+      {
+        title: "Our Community Focus",
+        description: "Built to foster economic growth from the ground up.",
+        icon: <Handshake className="text-teal-500" />,
+      },
+      {
+        title: "Transparent Process",
+        description: "No hidden fees. We believe in clear and simple lending.",
+        icon: <FileSearch className="text-indigo-500" />,
+      },
+      {
+        title: "Privacy Policy",
+        description: "Learn how we collect, use, and protect your information.",
+        icon: <FileText className="text-red-500" />,
+        action: <ToastAction altText="Privacy" asChild><Link href="/privacy-policy">Read Policy</Link></ToastAction>
       },
        {
         title: "Ready to Get Started?",
