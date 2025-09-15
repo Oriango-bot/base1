@@ -39,22 +39,55 @@ export default function HomePage() {
       },
     ];
 
-    let delay = 1000;
-    notifications.forEach((notif, index) => {
-      setTimeout(() => {
-        toast({
-          title: (
-            <div className="flex items-center gap-2">
-              {notif.icon}
-              <span className="font-semibold">{notif.title}</span>
-            </div>
-          ),
-          description: notif.description,
-          duration: 5000,
-        });
-      }, delay * (index + 1));
-    });
-     // eslint-disable-next-line react-hooks/exhaustive-deps
+    let notificationIndex = 0;
+    
+    const showNotification = () => {
+        if (notificationIndex < notifications.length) {
+            const notif = notifications[notificationIndex];
+            toast({
+                title: (
+                    <div className="flex items-center gap-2">
+                    {notif.icon}
+                    <span className="font-semibold">{notif.title}</span>
+                    </div>
+                ),
+                description: notif.description,
+                duration: 8000, // Increased duration
+            });
+            notificationIndex++;
+        }
+    }
+
+    // Show initial set of notifications
+    showNotification(); // Show first one immediately
+    const initialTimer = setInterval(() => {
+        if (notificationIndex < notifications.length) {
+            showNotification();
+        } else {
+            clearInterval(initialTimer);
+        }
+    }, 3000); // Stagger initial notifications
+    
+    // Set up a loop to repeat the notifications
+    const loopTimer = setInterval(() => {
+        notificationIndex = 0; // Reset index
+        showNotification(); // Show first one immediately
+        const repeatTimer = setInterval(() => {
+            if (notificationIndex < notifications.length) {
+                showNotification();
+            } else {
+                clearInterval(repeatTimer);
+            }
+        }, 3000);
+    }, (notifications.length * 3000) + 10000); // Repeat after the full cycle + extra delay
+
+    // Cleanup on component unmount
+    return () => {
+        clearInterval(initialTimer);
+        clearInterval(loopTimer);
+    };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
 
