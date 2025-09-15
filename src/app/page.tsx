@@ -1,8 +1,11 @@
 
+'use client';
+
+import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FileText, FileSearch, Wallet, Menu } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -12,8 +15,49 @@ import {
 } from "@/components/ui/sheet";
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
 import { OriangoLogo } from '@/components/oriango-logo';
+import { useToast } from '@/hooks/use-toast';
 
 export default function HomePage() {
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const notifications = [
+      {
+        title: "Welcome to Oriango!",
+        description: "Financial empowerment, made simple.",
+        icon: <Info className="text-primary" />,
+      },
+      {
+        title: "Easy Application",
+        description: "Get funded in three simple steps.",
+        icon: <CheckCircle className="text-green-500" />,
+      },
+      {
+        title: "AI-Powered Eligibility",
+        description: "Check your loan eligibility instantly.",
+        icon: <Cpu className="text-accent" />,
+      },
+    ];
+
+    let delay = 1000;
+    notifications.forEach((notif, index) => {
+      setTimeout(() => {
+        toast({
+          title: (
+            <div className="flex items-center gap-2">
+              {notif.icon}
+              <span className="font-semibold">{notif.title}</span>
+            </div>
+          ),
+          description: notif.description,
+          duration: 5000,
+        });
+      }, delay * (index + 1));
+    });
+     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+
   return (
     <div className="flex flex-col min-h-dvh bg-background">
       <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
@@ -183,3 +227,5 @@ export default function HomePage() {
     </div>
   );
 }
+
+    

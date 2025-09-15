@@ -20,11 +20,13 @@ import { Skeleton } from '@/components/ui/skeleton';
 import CreateLoanDialog from "@/components/create-loan-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
   const [userLoans, setUserLoans] = useState<Loan[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -37,6 +39,20 @@ export default function Dashboard() {
     } else {
         setIsLoading(false);
     }
+  }, [user]);
+
+  useEffect(() => {
+    // Show a one-time welcome toast
+    const welcomeToastShown = sessionStorage.getItem('welcomeToastShown');
+    if (user && !welcomeToastShown) {
+      toast({
+        title: `Welcome back, ${user.name}!`,
+        description: "You can view your loans and apply for new ones here.",
+        duration: 5000,
+      });
+      sessionStorage.setItem('welcomeToastShown', 'true');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user]);
 
   if (authLoading || isLoading) {
@@ -226,3 +242,5 @@ function DashboardSkeleton() {
     </div>
   )
 }
+
+    
