@@ -5,7 +5,7 @@ import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu, Users, Building } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -16,6 +16,7 @@ import {
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
 import { OriangoLogo } from '@/components/oriango-logo';
 import { useToast } from '@/hooks/use-toast';
+import { ToastAction } from '@/components/ui/toast';
 
 export default function HomePage() {
   const { toast } = useToast();
@@ -24,23 +25,38 @@ export default function HomePage() {
     const notifications = [
       {
         title: "Welcome to Oriango!",
-        description: "Financial empowerment, made simple.",
+        description: "Financial empowerment, made simple for you.",
         icon: <Info className="text-primary" />,
       },
       {
-        title: "Easy Application",
+        title: "About Our Mission",
+        description: "We support entrepreneurs to build a better future.",
+        icon: <Building className="text-blue-500" />,
+        action: <ToastAction altText="About Us" asChild><Link href="/about">Learn More</Link></ToastAction>
+      },
+      {
+        title: "How It Works",
         description: "Get funded in three simple steps.",
         icon: <CheckCircle className="text-green-500" />,
       },
       {
         title: "AI-Powered Eligibility",
-        description: "Check your loan eligibility instantly.",
+        description: "Check your loan eligibility instantly before you apply.",
         icon: <Cpu className="text-accent" />,
+      },
+       {
+        title: "Ready to Get Started?",
+        description: "Create an account to begin your financial journey.",
+        icon: <Users className="text-purple-500" />,
+        action: <ToastAction altText="Get Started" asChild><Link href="/signup">Sign Up</Link></ToastAction>
       },
     ];
 
     let notificationIndex = 0;
     
+    // Store timers in a ref to clean them up properly
+    const timers = new Set<NodeJS.Timeout>();
+
     const showNotification = () => {
         if (notificationIndex < notifications.length) {
             const notif = notifications[notificationIndex];
@@ -52,39 +68,39 @@ export default function HomePage() {
                     </div>
                 ),
                 description: notif.description,
-                duration: 8000, // Increased duration
+                duration: 8000,
+                action: notif.action,
             });
             notificationIndex++;
         }
     }
 
-    // Show initial set of notifications
-    showNotification(); // Show first one immediately
-    const initialTimer = setInterval(() => {
-        if (notificationIndex < notifications.length) {
-            showNotification();
-        } else {
-            clearInterval(initialTimer);
-        }
-    }, 3000); // Stagger initial notifications
-    
-    // Set up a loop to repeat the notifications
-    const loopTimer = setInterval(() => {
-        notificationIndex = 0; // Reset index
+    const startNotificationSequence = () => {
+        notificationIndex = 0;
         showNotification(); // Show first one immediately
-        const repeatTimer = setInterval(() => {
+        const sequenceTimer = setInterval(() => {
             if (notificationIndex < notifications.length) {
                 showNotification();
             } else {
-                clearInterval(repeatTimer);
+                clearInterval(sequenceTimer);
+                timers.delete(sequenceTimer);
             }
-        }, 3000);
-    }, (notifications.length * 3000) + 10000); // Repeat after the full cycle + extra delay
+        }, 4000);
+        timers.add(sequenceTimer);
+    };
+
+    // Start the first sequence
+    startNotificationSequence();
+    
+    // Set up a loop to repeat the notifications
+    const loopTimer = setInterval(() => {
+        startNotificationSequence();
+    }, (notifications.length * 4000) + 10000); // Repeat after the full cycle + extra delay
 
     // Cleanup on component unmount
     return () => {
-        clearInterval(initialTimer);
         clearInterval(loopTimer);
+        timers.forEach(timer => clearInterval(timer));
     };
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -260,5 +276,3 @@ export default function HomePage() {
     </div>
   );
 }
-
-    
