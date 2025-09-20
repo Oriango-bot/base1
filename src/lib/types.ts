@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'user' | 'admin' | 'super-admin';
 
 export type User = {
@@ -62,8 +63,8 @@ export type Loan = {
   processingFee: number;
   
   hasCollateral: boolean;
-  collateral?: { description: string }[];
-  collateralValue?: number;
+  collateral: { description: string }[];
+  collateralValue: number;
   guarantors: { name: string; idNumber: string; phone: string; }[];
   
   attachments: {
@@ -100,3 +101,6 @@ export type ApiKey = {
     lastUsed: string | null;
     requestCount: number;
 };
+
+
+    

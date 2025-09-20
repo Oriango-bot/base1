@@ -382,11 +382,12 @@ export async function createLoan(formData: FormData) {
     const interestRate = 15; // Standard 15% flat rate
     const processingFee = amount * 0.025; // 2.5% processing fee
 
-    // Construct guarantors array
-    const guarantors = [];
+    const getBool = (key: string) => formData.get(key) === 'true';
+
     const guarantor1Name = formData.get('guarantor1Name') as string;
     const guarantor1Id = formData.get('guarantor1Id') as string;
     const guarantor1Phone = formData.get('guarantor1Phone') as string;
+    const guarantors = [];
     if (guarantor1Name && guarantor1Id && guarantor1Phone) {
         guarantors.push({
             name: guarantor1Name,
@@ -394,23 +395,18 @@ export async function createLoan(formData: FormData) {
             phone: guarantor1Phone,
         });
     }
-    
-    const getBool = (key: string) => formData.get(key) === 'true';
 
     const newLoanDoc: Omit<Loan, 'id'> = {
       borrowerId,
       formNumber,
-      // Core fields
       amount,
       interestRate,
       repaymentSchedule: formData.get('repaymentSchedule') as 'daily' | 'weekly' | 'bi-weekly' | 'monthly',
-      // Applicant Details
       idNumber: formData.get('idNumber') as string,
       dob: formData.get('dob') as string,
       nextOfKinName: formData.get('nextOfKinName') as string,
       nextOfKinRelationship: formData.get('nextOfKinRelationship') as string,
       nextOfKinContact: formData.get('nextOfKinContact') as string,
-      // Employment
       occupation: formData.get('occupation') as string,
       employerName: formData.get('employerName') as string,
       workLocation: formData.get('workLocation') as string,
@@ -418,21 +414,18 @@ export async function createLoan(formData: FormData) {
       monthlyIncome: parseFloat(formData.get('monthlyIncome') as string),
       sourceOfIncome: formData.get('sourceOfIncome') as string,
       sourceOfIncomeOther: formData.get('sourceOfIncomeOther') as string || undefined,
-      // Loan Details
       productType: formData.get('productType') as string,
       loanPurpose: formData.getAll('loanPurpose') as string[],
       loanPurposeOther: formData.get('loanPurposeOther') as string || undefined,
       processingFee,
-      // Security
       hasCollateral: getBool('hasCollateral'),
       collateral: [
           { description: formData.get('collateral1') as string },
           { description: formData.get('collateral2') as string },
           { description: formData.get('collateral3') as string },
       ].filter(c => c.description),
-      collateralValue: parseFloat(formData.get('collateralValue') as string) || undefined,
+      collateralValue: parseFloat(formData.get('collateralValue') as string) || 0,
       guarantors,
-      // Attachments & Declaration
       attachments: {
         idCopy: getBool('attachments_idCopy'),
         incomeProof: getBool('attachments_incomeProof'),
@@ -442,12 +435,11 @@ export async function createLoan(formData: FormData) {
       },
       declarationSignature: formData.get('declarationSignature') as string,
       declarationDate: new Date().toISOString(),
-      // System Fields
       issueDate: new Date().toISOString(),
       status: 'pending' as LoanStatus,
       statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
       repayments: [],
-      partnerId: 1, // Default all new applications to Oriango
+      partnerId: 1, 
       createdBy,
     };
 
@@ -838,7 +830,7 @@ export async function getNextPartnerId(): Promise<number> {
     }
     
     // If no partners exist, start with 2 (since 1 is Oriango)
-    return 2;
+    return 2; 
   } catch (error) {
     console.error("Failed to get next partner ID:", error);
     // Fallback to a high number to avoid collisions on error
@@ -918,3 +910,6 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
     return { success: false, error: (error as Error).message };
   }
 }
+
+
+    

@@ -26,12 +26,12 @@ import type { User } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
-import { Form, FormField, FormItem, FormControl, FormLabel } from '@/components/ui/form';
+import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
 
 const loanSchema = z.object({
   // Step 1
   idNumber: z.string().min(5, 'A valid ID/Passport number is required.'),
-  dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "Invalid date format." }),
+  dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "A valid date of birth is required." }),
   nextOfKinName: z.string().min(2, 'Next of kin name is required.'),
   nextOfKinRelationship: z.string().min(2, 'Relationship is required.'),
   nextOfKinContact: z.string().min(10, 'A valid contact is required.'),
@@ -48,12 +48,12 @@ const loanSchema = z.object({
   // Step 3
   productType: z.enum(['biz-flex', 'hustle-flex', 'rent-flex'], { required_error: 'Please select a product type.'}),
   amount: z.coerce.number().positive({ message: 'Amount must be positive.' }),
-  loanPurpose: z.array(z.string()).refine((value) => value.some((item) => item), { message: "You have to select at least one purpose." }),
+  loanPurpose: z.array(z.string()).refine((value) => value.length > 0, { message: "You have to select at least one purpose." }),
   loanPurposeOther: z.string().optional(),
   repaymentSchedule: z.enum(['daily', 'weekly', 'bi-weekly', 'monthly']),
   
   // Step 4
-  hasCollateral: z.boolean().default(false).optional(),
+  hasCollateral: z.boolean().default(false),
   collateral1: z.string().optional(),
   collateral2: z.string().optional(),
   collateral3: z.string().optional(),
@@ -63,32 +63,32 @@ const loanSchema = z.object({
   guarantor1Phone: z.string().optional(),
 
   // Step 5
-  attachments_idCopy: z.literal(true, {
-    errorMap: () => ({ message: "You must confirm you have a copy of your ID." }),
+  attachments_idCopy: z.boolean().refine(val => val === true, {
+    message: "You must confirm you have a copy of your ID.",
   }),
-  attachments_incomeProof: z.boolean().default(false).optional(),
-  attachments_guarantorIdCopies: z.boolean().default(false).optional(),
-  attachments_businessLicense: z.boolean().default(false).optional(),
-  attachments_passportPhoto: z.boolean().default(false).optional(),
+  attachments_incomeProof: z.boolean().default(false),
+  attachments_guarantorIdCopies: z.boolean().default(false),
+  attachments_businessLicense: z.boolean().default(false),
+  attachments_passportPhoto: z.boolean().default(false),
   declarationSignature: z.string().min(1, "Signature is required to agree to terms."),
-}).refine(data => {
-    // If other source of income is selected, the other field must be filled
+})
+.refine(data => {
     if (data.sourceOfIncome === 'other') {
         return !!data.sourceOfIncomeOther && data.sourceOfIncomeOther.length > 2;
     }
     return true;
 }, {
-    message: "Please specify your source of income.",
+    message: "Please specify your other source of income.",
     path: ["sourceOfIncomeOther"],
-}).refine(data => {
-    // If collateral checkbox is checked, ensure description and value are provided
+})
+.refine(data => {
     if (data.hasCollateral) {
         return !!data.collateral1 && data.collateral1.length > 2 && (data.collateralValue || 0) > 0;
     }
     return true;
 }, {
-    message: "Collateral description and value are required if you are providing collateral.",
-    path: ["collateral1"],
+    message: "Collateral item 1 and its value are required if you are providing collateral.",
+    path: ["collateral1"], // You can also use ["collateralValue"]
 });
 
 
@@ -104,6 +104,7 @@ const loanPurposes = [
     { id: 'refurbishment', label: 'Refurbishment' },
     { id: 'rent', label: 'Rent' },
     { id: 'expansion', label: 'Expansion' },
+    { id: 'other', label: 'Other (Specify)' },
 ]
 
 export default function CreateLoanDialog({ borrowerId, canApply = true }: CreateLoanDialogProps) {
@@ -117,30 +118,42 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
 
   const form = useForm<LoanFormValues>({
     resolver: zodResolver(loanSchema),
-    defaultValues: {
-      loanPurpose: [],
-      repaymentSchedule: 'monthly',
-      hasCollateral: false,
-      attachments_idCopy: false,
+    defaultValues: () => {
+      const savedData = localStorage.getItem(storageKey);
+      const initialValues = savedData ? JSON.parse(savedData) : {
+        loanPurpose: [],
+        repaymentSchedule: 'monthly',
+        hasCollateral: false,
+        attachments_idCopy: false,
+        attachments_incomeProof: false,
+        attachments_guarantorIdCopies: false,
+        attachments_businessLicense: false,
+        attachments_passportPhoto: false,
+      };
+      
+      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('loggedInUser') : null;
+      if (storedUser) {
+        const parsedUser = JSON.parse(storedUser);
+        initialValues.declarationSignature = parsedUser.name;
+      }
+      return initialValues;
     },
+    mode: 'onChange',
   });
 
-  // Load from localStorage on mount
+  // Effect to load user from localStorage and set signature
   useEffect(() => {
-    const savedData = localStorage.getItem(storageKey);
-    if (savedData) {
-      const parsedData = JSON.parse(savedData);
-      form.reset(parsedData); // Populate form with saved data
-    }
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         setCurrentUser(parsedUser);
-        form.setValue('declarationSignature', parsedUser.name, { shouldValidate: true });
+        if (!form.getValues('declarationSignature')) {
+           form.setValue('declarationSignature', parsedUser.name, { shouldValidate: true, shouldDirty: true });
+        }
     }
-  }, [borrowerId, form, storageKey]);
+  }, [form]);
 
-  // Save to localStorage on change
+  // Effect to save form data to localStorage
   useEffect(() => {
     const subscription = form.watch((value) => {
       localStorage.setItem(storageKey, JSON.stringify(value));
@@ -149,7 +162,11 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
   }, [form, storageKey]);
 
 
-  const { control, register, handleSubmit, formState: { errors }, trigger } = form;
+  const { control, register, handleSubmit, formState: { errors }, trigger, watch } = form;
+  
+  const watchHasCollateral = watch('hasCollateral');
+  const watchSourceOfIncome = watch('sourceOfIncome');
+  const watchLoanPurpose = watch('loanPurpose');
 
   const onSubmit = async (data: LoanFormValues) => {
     if (!currentUser) {
@@ -198,12 +215,18 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     let fields: (keyof LoanFormValues)[] = [];
     if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome', 'sourceOfIncomeOther'];
-    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'repaymentSchedule'];
+    if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'loanPurposeOther', 'repaymentSchedule'];
     if (step === 4) fields = ['hasCollateral', 'collateral1', 'collateralValue', 'guarantor1Name', 'guarantor1Id', 'guarantor1Phone'];
     
     const isValid = await trigger(fields);
     if (isValid) {
       setStep(s => s + 1);
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Incomplete Step",
+        description: "Please fill out all required fields before proceeding."
+      })
     }
   }
   const prevStep = () => setStep(s => s - 1);
@@ -279,7 +302,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                             </FormItem>
                           )}
                       />
-                      {form.getValues('sourceOfIncome') === 'other' && (
+                      {watchSourceOfIncome === 'other' && (
                         <div>
                           <Label htmlFor="sourceOfIncomeOther">Please Specify</Label>
                           <Input id="sourceOfIncomeOther" {...register('sourceOfIncomeOther')} />
@@ -323,6 +346,13 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                           </div>
                           {errors.loanPurpose && <p className="text-destructive text-xs mt-1">{errors.loanPurpose.message}</p>}
                       </div>
+                      {watchLoanPurpose?.includes('other') && (
+                        <div>
+                          <Label htmlFor="loanPurposeOther">Please specify other purpose</Label>
+                          <Input id="loanPurposeOther" {...register('loanPurposeOther')} />
+                          {errors.loanPurposeOther && <p className="text-destructive text-xs mt-1">{errors.loanPurposeOther.message}</p>}
+                        </div>
+                      )}
                    </section>
               )}
               {step === 4 && (
@@ -332,12 +362,13 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                           <Controller name="hasCollateral" control={control} render={({field}) => (
                               <Checkbox id="hasCollateral" checked={field.value} onCheckedChange={field.onChange} />
                           )} />
-                          <Label htmlFor="hasCollateral">Are you providing collateral? (Optional)</Label>
+                          <Label htmlFor="hasCollateral">Are you providing collateral?</Label>
                       </div>
-                      {form.getValues('hasCollateral') && (
+                      {watchHasCollateral && (
                         <div className="p-4 border rounded-md space-y-4">
                             <p className="text-sm text-muted-foreground">Please describe the collateral you are providing.</p>
                              {errors.collateral1 && <p className="text-destructive text-xs mt-1">{errors.collateral1.message}</p>}
+                             {errors.collateralValue && <p className="text-destructive text-xs mt-1">{errors.collateralValue.message}</p>}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div><Label>Collateral Item 1</Label><Input {...register('collateral1')} /></div>
                                 <div><Label>Collateral Item 2 (Optional)</Label><Input {...register('collateral2')} /></div>
@@ -360,14 +391,22 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                       <p className="text-sm text-muted-foreground">Please confirm you have the following documents ready. You will be asked to provide them upon request. This does not upload the files.</p>
                        <div className="space-y-2">
                           <FormField control={control} name="attachments_idCopy" render={({field}) => (
-                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label htmlFor="attachments_idCopy">Copy of ID (Required)</Label></FormItem>
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label>Copy of ID (Required)</Label></FormItem>
                           )} />
                           {errors.attachments_idCopy && <p className="text-destructive text-xs mt-1">{errors.attachments_idCopy.message}</p>}
 
-                          <div className="flex items-center space-x-2"><Checkbox id="attachments_incomeProof" {...register('attachments_incomeProof')} /><Label htmlFor="attachments_incomeProof">Proof of Income</Label></div>
-                          <div className="flex items-center space-x-2"><Checkbox id="attachments_guarantorIdCopies" {...register('attachments_guarantorIdCopies')} /><Label htmlFor="attachments_guarantorIdCopies">Guarantor ID Copies</Label></div>
-                          <div className="flex items-center space-x-2"><Checkbox id="attachments_businessLicense" {...register('attachments_businessLicense')} /><Label htmlFor="attachments_businessLicense">Business License (if applicable)</Label></div>
-                          <div className="flex items-center space-x-2"><Checkbox id="attachments_passportPhoto" {...register('attachments_passportPhoto')} /><Label htmlFor="attachments_passportPhoto">Passport Photo</Label></div>
+                          <FormField control={control} name="attachments_incomeProof" render={({field}) => (
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label>Proof of Income</Label></FormItem>
+                          )} />
+                          <FormField control={control} name="attachments_guarantorIdCopies" render={({field}) => (
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label>Guarantor ID Copies</Label></FormItem>
+                          )} />
+                          <FormField control={control} name="attachments_businessLicense" render={({field}) => (
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label>Business License (if applicable)</Label></FormItem>
+                          )} />
+                           <FormField control={control} name="attachments_passportPhoto" render={({field}) => (
+                                <FormItem className="flex items-center space-x-2"><FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl><Label>Passport Photo</Label></FormItem>
+                          )} />
                       </div>
                       <div className="pt-4 space-y-2">
                            <h4 className="font-medium">Declaration & Consent</h4>
@@ -395,3 +434,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     </Dialog>
   );
 }
+
+
+    
