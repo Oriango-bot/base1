@@ -36,7 +36,6 @@ export default function AnnouncementBanner() {
   const [isDismissed, setIsDismissed] = useState(true);
 
   useEffect(() => {
-    // Check sessionStorage to see if the banner was dismissed in the current session
     const dismissed = sessionStorage.getItem('announcementDismissed');
     if (dismissed !== 'true') {
       setIsDismissed(false);
@@ -49,7 +48,7 @@ export default function AnnouncementBanner() {
 
     const interval = setInterval(() => {
       setCurrentIndex((prevIndex) => (prevIndex + 1) % announcements.length);
-    }, 5000); // Change announcement every 5 seconds
+    }, 5000);
 
     return () => clearInterval(interval);
   }, [isDismissed]);
@@ -57,7 +56,6 @@ export default function AnnouncementBanner() {
   const handleDismiss = () => {
     setIsVisible(false);
     setIsDismissed(true);
-    // Remember the dismissal for the current browser session
     sessionStorage.setItem('announcementDismissed', 'true');
   };
 
@@ -69,13 +67,13 @@ export default function AnnouncementBanner() {
 
   return (
     <div className={cn(
-        "relative bg-primary/90 text-primary-foreground backdrop-blur-sm transition-transform duration-300 ease-in-out",
+        "relative bg-gradient-to-r from-primary to-accent text-primary-foreground backdrop-blur-sm transition-transform duration-300 ease-in-out",
         isVisible ? "translate-y-0" : "-translate-y-full"
     )}>
       <div className="container mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-10">
           <div className="flex items-center">
-            <Megaphone className="h-5 w-5 mr-3" />
+            <Megaphone className="h-5 w-5 mr-3 animate-pulse" />
             <p className="text-sm font-medium">
               {text}
               {link && (
@@ -88,7 +86,7 @@ export default function AnnouncementBanner() {
           <Button
             variant="ghost"
             size="icon"
-            className="h-7 w-7 text-primary-foreground hover:bg-primary-foreground/20"
+            className="h-7 w-7 text-primary-foreground hover:bg-white/20"
             onClick={handleDismiss}
             aria-label="Dismiss announcement"
           >
