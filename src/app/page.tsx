@@ -1,11 +1,10 @@
 
 'use client';
 
-import { useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FileText, FileSearch, Wallet, Menu, Info, CheckCircle, Cpu, Users, Building, Lock, FileBadge, Handshake } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -15,129 +14,12 @@ import {
 } from "@/components/ui/sheet";
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
 import { OriangoLogo } from '@/components/oriango-logo';
-import { useToast } from '@/hooks/use-toast';
-import { ToastAction } from '@/components/ui/toast';
+import AnnouncementBanner from '@/components/announcement-banner';
 
 export default function HomePage() {
-  const { toast } = useToast();
-
-  useEffect(() => {
-    const notifications = [
-      {
-        title: "Welcome to Oriango!",
-        description: "Financial empowerment, made simple for you.",
-        icon: <Info className="text-primary" />,
-      },
-      {
-        title: "About Our Mission",
-        description: "We support entrepreneurs to build a better future.",
-        icon: <Building className="text-blue-500" />,
-        action: <ToastAction altText="About Us" asChild><Link href="/about">Learn More</Link></ToastAction>
-      },
-      {
-        title: "How It Works",
-        description: "Get funded in three simple steps: Apply, Get Approved, Receive Funds.",
-        icon: <CheckCircle className="text-green-500" />,
-        action: <ToastAction altText="How It Works" asChild><Link href="/#how-it-works">See Steps</Link></ToastAction>
-      },
-      {
-        title: "AI-Powered Eligibility",
-        description: "Check your loan eligibility instantly before you apply.",
-        icon: <Cpu className="text-accent" />,
-         action: <ToastAction altText="Calculator" asChild><Link href="/#calculator">Try It Now</Link></ToastAction>
-      },
-      {
-        title: "Your Security Matters",
-        description: "We use top-tier security to protect your personal data.",
-        icon: <Lock className="text-yellow-500" />,
-      },
-      {
-        title: "Terms of Service",
-        description: "Understand our commitment to you by reading our terms.",
-        icon: <FileBadge className="text-gray-500" />,
-        action: <ToastAction altText="Terms" asChild><Link href="/terms-of-service">Read Terms</Link></ToastAction>
-      },
-      {
-        title: "Our Community Focus",
-        description: "Built to foster economic growth from the ground up.",
-        icon: <Handshake className="text-teal-500" />,
-      },
-      {
-        title: "Transparent Process",
-        description: "No hidden fees. We believe in clear and simple lending.",
-        icon: <FileSearch className="text-indigo-500" />,
-      },
-      {
-        title: "Privacy Policy",
-        description: "Learn how we collect, use, and protect your information.",
-        icon: <FileText className="text-red-500" />,
-        action: <ToastAction altText="Privacy" asChild><Link href="/privacy-policy">Read Policy</Link></ToastAction>
-      },
-       {
-        title: "Ready to Get Started?",
-        description: "Create an account to begin your financial journey.",
-        icon: <Users className="text-purple-500" />,
-        action: <ToastAction altText="Get Started" asChild><Link href="/signup">Sign Up</Link></ToastAction>
-      },
-    ];
-
-    let notificationIndex = 0;
-    
-    // Store timers in a ref to clean them up properly
-    const timers = new Set<NodeJS.Timeout>();
-
-    const showNotification = () => {
-        if (notificationIndex < notifications.length) {
-            const notif = notifications[notificationIndex];
-            toast({
-                title: (
-                    <div className="flex items-center gap-2">
-                    {notif.icon}
-                    <span className="font-semibold">{notif.title}</span>
-                    </div>
-                ),
-                description: notif.description,
-                duration: 8000,
-                action: notif.action,
-            });
-            notificationIndex++;
-        }
-    }
-
-    const startNotificationSequence = () => {
-        notificationIndex = 0;
-        showNotification(); // Show first one immediately
-        const sequenceTimer = setInterval(() => {
-            if (notificationIndex < notifications.length) {
-                showNotification();
-            } else {
-                clearInterval(sequenceTimer);
-                timers.delete(sequenceTimer);
-            }
-        }, 4000);
-        timers.add(sequenceTimer);
-    };
-
-    // Start the first sequence
-    startNotificationSequence();
-    
-    // Set up a loop to repeat the notifications
-    const loopTimer = setInterval(() => {
-        startNotificationSequence();
-    }, (notifications.length * 4000) + 15000); // Repeat after the full cycle + 15 second delay
-
-    // Cleanup on component unmount
-    return () => {
-        clearInterval(loopTimer);
-        timers.forEach(timer => clearInterval(timer));
-    };
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-
   return (
     <div className="flex flex-col min-h-dvh bg-background">
+      <AnnouncementBanner />
       <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
         <Link href="/" className="flex items-center justify-center gap-2">
           <OriangoLogo className="h-6 w-6 text-primary" />
