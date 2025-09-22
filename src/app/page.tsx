@@ -4,7 +4,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
-import { FileText, FileSearch, Wallet, Menu } from 'lucide-react';
+import { FileText, FileSearch, Wallet, Menu, Zap, Repeat, HandCoins, Users } from 'lucide-react';
 import Footer from '@/components/footer';
 import {
   Sheet,
@@ -15,6 +15,7 @@ import {
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
 import { OriangoLogo } from '@/components/oriango-logo';
 import AnnouncementBanner from '@/components/announcement-banner';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 export default function HomePage() {
   return (
@@ -165,7 +166,51 @@ export default function HomePage() {
           </div>
         </section>
 
-        <section id="calculator" className="w-full py-12 md:py-24 lg:py-32 bg-card">
+        <section id="why-choose-us" className="w-full py-12 md:py-24 lg:py-32 bg-card">
+          <div className="container px-4 md:px-6">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <div className="space-y-3">
+                <div className="inline-block rounded-lg bg-muted px-3 py-1 text-sm">Our Promise</div>
+                <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">Why Choose Oriango?</h2>
+                <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                  We are committed to your financial success with a platform built on trust and simplicity.
+                </p>
+              </div>
+            </div>
+            <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-4 mt-12">
+              <div className="grid gap-2 text-center">
+                 <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-primary/10 mb-2">
+                    <Zap className="h-6 w-6 text-primary" />
+                 </div>
+                <h3 className="text-lg font-bold">Fast & Simple</h3>
+                <p className="text-sm text-muted-foreground">Our streamlined online application takes minutes to complete.</p>
+              </div>
+              <div className="grid gap-2 text-center">
+                <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-primary/10 mb-2">
+                    <Repeat className="h-6 w-6 text-primary" />
+                 </div>
+                <h3 className="text-lg font-bold">Flexible Repayments</h3>
+                <p className="text-sm text-muted-foreground">Choose from daily, weekly, or monthly plans that fit your cash flow.</p>
+              </div>
+              <div className="grid gap-2 text-center">
+                <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-primary/10 mb-2">
+                    <HandCoins className="h-6 w-6 text-primary" />
+                 </div>
+                <h3 className="text-lg font-bold">Transparent Fees</h3>
+                <p className="text-sm text-muted-foreground">No hidden charges. Know all costs upfront before you commit.</p>
+              </div>
+               <div className="grid gap-2 text-center">
+                <div className="mx-auto flex items-center justify-center size-12 rounded-full bg-primary/10 mb-2">
+                    <Users className="h-6 w-6 text-primary" />
+                 </div>
+                <h3 className="text-lg font-bold">Community Focused</h3>
+                <p className="text-sm text-muted-foreground">We invest in local entrepreneurs and individuals to build a stronger community.</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="calculator" className="w-full py-12 md:py-24 lg:py-32 bg-background">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-3">
