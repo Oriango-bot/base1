@@ -116,11 +116,22 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
   
   const storageKey = `loan_form_data_${borrowerId}`;
 
-  const form = useForm<LoanFormValues>({
-    resolver: zodResolver(loanSchema),
-    defaultValues: () => {
-      const savedData = localStorage.getItem(storageKey);
-      const initialValues = savedData ? JSON.parse(savedData) : {
+  const getInitialValues = () => {
+    if (typeof window === 'undefined') {
+        return {
+            loanPurpose: [],
+            repaymentSchedule: 'monthly',
+            hasCollateral: false,
+            attachments_idCopy: false,
+            attachments_incomeProof: false,
+            attachments_guarantorIdCopies: false,
+            attachments_businessLicense: false,
+            attachments_passportPhoto: false,
+        };
+    }
+
+    const savedData = localStorage.getItem(storageKey);
+    const initialValues = savedData ? JSON.parse(savedData) : {
         loanPurpose: [],
         repaymentSchedule: 'monthly',
         hasCollateral: false,
@@ -129,15 +140,19 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
         attachments_guarantorIdCopies: false,
         attachments_businessLicense: false,
         attachments_passportPhoto: false,
-      };
-      
-      const storedUser = typeof window !== 'undefined' ? localStorage.getItem('loggedInUser') : null;
-      if (storedUser) {
+    };
+    
+    const storedUser = localStorage.getItem('loggedInUser');
+    if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
         initialValues.declarationSignature = parsedUser.name;
-      }
-      return initialValues;
-    },
+    }
+    return initialValues;
+  }
+
+  const form = useForm<LoanFormValues>({
+    resolver: zodResolver(loanSchema),
+    defaultValues: getInitialValues(),
     mode: 'onChange',
   });
 
@@ -434,6 +449,5 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     </Dialog>
   );
 }
-
 
     
