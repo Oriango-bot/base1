@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import AppShell from "@/components/app-shell";
 import { AuthProvider } from "@/hooks/use-auth";
+import { ThemeProvider } from "@/components/theme-provider";
 
 export const metadata: Metadata = {
   title: "Oriango MicroFinance",
@@ -26,10 +27,17 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
-        <AuthProvider>
-          <AppShell>{children}</AppShell>
-        </AuthProvider>
-        <Toaster />
+         <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <AuthProvider>
+              <AppShell>{children}</AppShell>
+            </AuthProvider>
+            <Toaster />
+        </ThemeProvider>
       </body>
     </html>
   );

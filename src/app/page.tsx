@@ -16,6 +16,7 @@ import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator'
 import { OriangoLogo } from '@/components/oriango-logo';
 import AnnouncementBanner from '@/components/announcement-banner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { ThemeSwitch } from '@/components/theme-switch';
 
 export default function HomePage() {
   return (
@@ -26,7 +27,8 @@ export default function HomePage() {
           <OriangoLogo className="h-6 w-6 text-primary" />
           <span className="font-semibold">Oriango</span>
         </Link>
-        <nav className="ml-auto flex">
+        <nav className="ml-auto flex items-center gap-2">
+          <ThemeSwitch />
           <Sheet>
             <SheetTrigger asChild>
               <Button variant="outline" size="icon" className="shrink-0">
