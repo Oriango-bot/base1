@@ -83,14 +83,3 @@ export async function calculateRepaymentScore(loan: Loan, repaymentAmount: numbe
     }
     return { change, reason };
 }
-
-export const SCORE_ACTIONS = {
-    LOAN_COMPLETED: {
-        change: 25,
-        reasonTemplate: "Loan {loanId} paid off successfully."
-    },
-    FIRST_LOAN_COMPLETED: {
-        change: 50,
-        reasonTemplate: "First loan {loanId} completed. Welcome bonus!"
-    }
-};

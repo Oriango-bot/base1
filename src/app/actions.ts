@@ -12,7 +12,7 @@ import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { randomBytes } from 'crypto';
-import { updateUserCreditScore, calculateRepaymentScore, SCORE_ACTIONS } from '@/lib/services/credit-score.service';
+import { updateUserCreditScore, calculateRepaymentScore } from '@/lib/services/credit-score.service';
 
 // --- Utility function to map MongoDB documents (if needed elsewhere) ---
 function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
@@ -601,6 +601,17 @@ export async function recordRepayment(formData: FormData) {
   const loanId = formData.get('loanId') as string;
   const amountStr = formData.get('amount') as string;
   const recordedBy = formData.get('recordedBy') as string;
+
+  const SCORE_ACTIONS = {
+      LOAN_COMPLETED: {
+          change: 25,
+          reasonTemplate: "Loan {loanId} paid off successfully."
+      },
+      FIRST_LOAN_COMPLETED: {
+          change: 50,
+          reasonTemplate: "First loan {loanId} completed. Welcome bonus!"
+      }
+  };
 
   if (!loanId || !amountStr || !recordedBy) {
     return { success: false, error: 'Missing required repayment data.' };
