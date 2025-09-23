@@ -1,4 +1,5 @@
 
+
 'use server';
 
 import { summarizeLoanHistory } from '@/ai/flows/summarize-loan-history';
@@ -11,6 +12,7 @@ import { ObjectId } from 'mongodb';
 import bcrypt from 'bcryptjs';
 import { v4 as uuidv4 } from 'uuid';
 import { randomBytes } from 'crypto';
+import { updateUserCreditScore, calculateRepaymentScore, SCORE_ACTIONS } from '@/lib/services/credit-score.service';
 
 // --- Utility function to map MongoDB documents (if needed elsewhere) ---
 function mapMongoId<T extends { _id: ObjectId }>(doc: T): Omit<T, '_id'> & { id: string } {
@@ -48,6 +50,8 @@ export async function getUsers(): Promise<User[]> {
       joinDate: user.joinDate,
       role: user.role,
       partnerId: user.partnerId,
+      creditScore: user.creditScore,
+      creditScoreHistory: user.creditScoreHistory || [],
     })) as User[];
   } catch (error) {
     console.error("Failed to get users:", error);
@@ -71,6 +75,8 @@ export async function getUserById(userId: string): Promise<User | null> {
       joinDate: user.joinDate,
       role: user.role,
       partnerId: user.partnerId,
+      creditScore: user.creditScore,
+      creditScoreHistory: user.creditScoreHistory || [],
     } as User;
   } catch (error) {
     console.error(`Failed to get user ${userId}:`, error);
@@ -111,6 +117,8 @@ export async function loginUser(data: FormData): Promise<{ user: User | null; er
       joinDate: user.joinDate,
       role: user.role,
       partnerId: user.partnerId,
+      creditScore: user.creditScore || 500,
+      creditScoreHistory: user.creditScoreHistory || [],
     };
     
     return { user: userToReturn, error: null };
@@ -155,6 +163,13 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
       role,
       joinDate: new Date().toISOString(),
       partnerId: 1, // Default to Oriango
+      creditScore: 500, // Starting credit score
+      creditScoreHistory: [{
+          date: new Date().toISOString(),
+          change: 500,
+          reason: 'Account created.',
+          newScore: 500,
+      }],
     };
 
     const result = await usersCollection.insertOne(newUserDoc);
@@ -174,6 +189,8 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
         joinDate: createdUser.joinDate,
         role: createdUser.role,
         partnerId: createdUser.partnerId,
+        creditScore: createdUser.creditScore,
+        creditScoreHistory: createdUser.creditScoreHistory,
     };
 
     return { user: userToReturn, error: null };
@@ -215,6 +232,13 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
       role: 'user' as UserRole, // Always 'user' when added by admin
       joinDate: new Date().toISOString(),
       partnerId: 1, // Default to Oriango
+      creditScore: 500, // Starting credit score
+      creditScoreHistory: [{
+          date: new Date().toISOString(),
+          change: 500,
+          reason: 'Account created by admin.',
+          newScore: 500,
+      }],
     };
 
     const result = await usersCollection.insertOne(newUserDoc);
@@ -234,6 +258,8 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
         joinDate: createdUser.joinDate,
         role: createdUser.role,
         partnerId: createdUser.partnerId,
+        creditScore: createdUser.creditScore,
+        creditScoreHistory: createdUser.creditScoreHistory,
     };
 
     return { user: userToReturn, error: null };
@@ -589,11 +615,20 @@ export async function recordRepayment(formData: FormData) {
     const client = await clientPromise;
     const db = client.db("oriango");
     const loansCollection = db.collection('loans');
+    const usersCollection = db.collection('users');
 
     const loanToUpdate = await loansCollection.findOne({ _id: new ObjectId(loanId) });
     if (!loanToUpdate) {
         return { success: false, error: 'Loan not found.' };
     }
+
+    // @ts-ignore
+    const loan = mapMongoId(loanToUpdate as any) as Loan;
+
+    // --- Credit Score Logic ---
+    const { change, reason } = await calculateRepaymentScore(loan, amount);
+    await updateUserCreditScore(loan.borrowerId, change, reason);
+    // --- End Credit Score ---
 
     const newRepayment: Repayment = {
         id: uuidv4(),
@@ -602,7 +637,6 @@ export async function recordRepayment(formData: FormData) {
     };
     
     const updatedRepayments = [...loanToUpdate.repayments, newRepayment];
-    // @ts-ignore
     const updatedStatusHistory = loanToUpdate.statusHistory ? [...loanToUpdate.statusHistory] : [];
     const totalPaid = updatedRepayments.reduce((sum, p) => sum + p.amount, 0);
     const totalOwed = loanToUpdate.amount * (1 + loanToUpdate.interestRate / 100);
@@ -619,6 +653,7 @@ export async function recordRepayment(formData: FormData) {
             repayments: updatedRepayments,
         }
     };
+
     if (newStatus !== loanToUpdate.status) {
         updateDoc.$set.status = newStatus;
         const historyEntry = {
@@ -629,6 +664,15 @@ export async function recordRepayment(formData: FormData) {
         // @ts-ignore
         updatedStatusHistory.push(historyEntry);
         updateDoc.$set.statusHistory = updatedStatusHistory;
+
+        // If loan is now paid, apply credit score bonus
+        if (newStatus === 'paid') {
+            const userLoans = await loansCollection.find({ borrowerId: loan.borrowerId, status: 'paid' }).toArray();
+            const isFirstLoan = userLoans.length === 1; // The current loan is now paid
+            const action = isFirstLoan ? SCORE_ACTIONS.FIRST_LOAN_COMPLETED : SCORE_ACTIONS.LOAN_COMPLETED;
+            const reasonText = action.reasonTemplate.replace('{loanId}', loan.formNumber.slice(-8));
+            await updateUserCreditScore(loan.borrowerId, action.change, reasonText);
+        }
     }
 
     await loansCollection.updateOne({ _id: new ObjectId(loanId) }, updateDoc);

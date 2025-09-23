@@ -12,6 +12,13 @@ export type User = {
   joinDate: string;
   role: UserRole;
   partnerId: number; // 1 for Oriango, others for partners
+  creditScore: number;
+  creditScoreHistory: {
+    date: string;
+    change: number;
+    reason: string;
+    newScore: number;
+  }[];
 };
 
 export type Repayment = {
