@@ -36,10 +36,10 @@ export default function Dashboard() {
           setUserLoans(loans.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()));
           setIsLoading(false);
         });
-    } else {
+    } else if (!authLoading) {
         setIsLoading(false);
     }
-  }, [user]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     // Show a one-time welcome toast
@@ -52,8 +52,7 @@ export default function Dashboard() {
       });
       sessionStorage.setItem('welcomeToastShown', 'true');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user]);
+  }, [user, toast]);
 
   if (authLoading || isLoading) {
     return <DashboardSkeleton />;

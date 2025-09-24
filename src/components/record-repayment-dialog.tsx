@@ -37,6 +37,7 @@ export default function RecordRepaymentDialog({ loanId }: { loanId: string }) {
   const router = useRouter();
 
   useEffect(() => {
+    // This effect runs only on the client
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));

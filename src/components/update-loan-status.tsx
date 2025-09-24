@@ -19,6 +19,7 @@ export default function UpdateLoanStatus({ loan }: { loan: Loan }) {
   const { toast } = useToast();
 
   useEffect(() => {
+    // This effect runs only on the client
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
       setCurrentUser(JSON.parse(storedUser));

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,15 +25,25 @@ export default function FormSeriesPage() {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
 
     useEffect(() => {
+        // This effect runs only on the client
         const storedUser = localStorage.getItem('loggedInUser');
         if (storedUser) {
           setCurrentUser(JSON.parse(storedUser));
         }
 
-        getFormSeries().then(data => {
-            setSeries(data);
-            setIsLoading(false);
-        });
+        const fetchSeries = async () => {
+            setIsLoading(true);
+            try {
+                const data = await getFormSeries();
+                setSeries(data);
+            } catch (error) {
+                console.error("Failed to fetch form series", error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchSeries();
     }, []);
 
     const handleSeriesAdded = () => {

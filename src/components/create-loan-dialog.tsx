@@ -142,22 +142,19 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
         attachments_passportPhoto: false,
     };
     
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        initialValues.declarationSignature = parsedUser.name;
-    }
+    // Defer setting signature until user is loaded from client-side storage
     return initialValues;
   }
 
   const form = useForm<LoanFormValues>({
     resolver: zodResolver(loanSchema),
-    defaultValues: getInitialValues,
+    defaultValues: getInitialValues(),
     mode: 'onChange',
   });
 
   // Effect to load user from localStorage and set signature
   useEffect(() => {
+    // This effect runs only on the client
     const storedUser = localStorage.getItem('loggedInUser');
     if (storedUser) {
         const parsedUser = JSON.parse(storedUser);
