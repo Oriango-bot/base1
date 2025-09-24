@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import Link from 'next/link';
@@ -6,80 +7,11 @@ import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { FileText, FileSearch, Wallet, Menu, Zap, Repeat, HandCoins, Users } from 'lucide-react';
 import Footer from '@/components/footer';
-import {
-  Sheet,
-  SheetContent,
-  SheetTrigger,
-  SheetTitle,
-} from "@/components/ui/sheet";
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
-import { OriangoLogo } from '@/components/oriango-logo';
-import AnnouncementBanner from '@/components/announcement-banner';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ThemeSwitch } from '@/components/theme-switch';
 
 export default function HomePage() {
   return (
-    <div className="flex flex-col min-h-dvh bg-background">
-      <AnnouncementBanner />
-      <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-        <Link href="/" className="flex items-center justify-center gap-2">
-          <OriangoLogo className="h-6 w-6 text-primary" />
-          <span className="font-semibold">Oriango</span>
-        </Link>
-        <nav className="ml-auto flex items-center gap-2">
-          <ThemeSwitch />
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button variant="outline" size="icon" className="shrink-0">
-                <Menu className="h-5 w-5" />
-                <span className="sr-only">Toggle navigation menu</span>
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="right">
-              <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-              <nav className="grid gap-6 text-lg font-medium mt-6">
-                <Link
-                  href="/login"
-                  className="hover:text-primary transition-colors"
-                >
-                  User Login
-                </Link>
-                <Link
-                  href="/admin/login"
-                  className="hover:text-primary transition-colors"
-                >
-                  Admin Portal
-                </Link>
-                <Link
-                  href="/about"
-                  className="hover:text-primary transition-colors"
-                >
-                  About Us
-                </Link>
-                <Link
-                  href="/#how-it-works"
-                  className="hover:text-primary transition-colors"
-                >
-                  How to Apply
-                </Link>
-                 <Link
-                  href="/#calculator"
-                  className="hover:text-primary transition-colors"
-                >
-                  Eligibility Calculator
-                </Link>
-                 <Link
-                  href="/signup"
-                  className="hover:text-primary transition-colors"
-                >
-                  Sign Up
-                </Link>
-              </nav>
-            </SheetContent>
-          </Sheet>
-        </nav>
-      </header>
+    <>
       <main className="flex-1">
         <section className="w-full py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
@@ -231,6 +163,7 @@ export default function HomePage() {
 
       </main>
       <Footer />
-    </div>
+    </>
   );
 }
+

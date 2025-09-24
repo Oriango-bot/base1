@@ -1,4 +1,5 @@
 
+
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -8,50 +9,35 @@ import { OriangoLogo } from '@/components/oriango-logo';
 
 export default function AboutUsPage() {
   return (
-    <div className="flex flex-col min-h-dvh bg-background">
-       <header className="px-4 lg:px-6 h-16 flex items-center border-b sticky top-0 bg-background/95 backdrop-blur-sm z-10">
-        <Link href="/" className="flex items-center justify-center gap-2">
-          <OriangoLogo className="h-6 w-6 text-primary" />
-          <span className="font-semibold">Oriango</span>
-        </Link>
-        <nav className="ml-auto flex gap-2">
-          <Button variant="ghost" asChild>
-              <Link href="/login">Login</Link>
-          </Button>
-          <Button asChild>
-              <Link href="/signup">Sign Up</Link>
-          </Button>
-        </nav>
-      </header>
-      <main className="flex-1">
-        <div className="container mx-auto py-12 px-4 md:px-6">
-          <div className="mb-8">
-             <Button asChild variant="outline">
-                <Link href="/">
-                    <ArrowLeft className="mr-2 h-4 w-4"/>
-                    Back to Home
-                </Link>
-             </Button>
-          </div>
-          <Card>
-            <CardHeader>
-              <CardTitle>About Oriango MicroFinance</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4 text-lg text-muted-foreground">
-              <p>
-                Oriango is dedicated to providing financial empowerment through accessible and transparent micro-finance solutions. We believe in supporting local entrepreneurs and individuals to achieve their goals and build a better future. 
-              </p>
-              <p>
-                Our mission is to foster economic growth from the ground up, with a focus on community, trust, and support. We leverage technology to create a clear, simple, and efficient money lending system that puts the power back in your hands.
-              </p>
-              <p>
-                Whether you're looking to expand your business, cover an emergency expense, or invest in your future, Oriango provides a reliable and supportive platform to help you on your journey. Our process is designed to be straightforward and fast, ensuring you get the funds you need when you need them.
-              </p>
-            </CardContent>
-          </Card>
+    <>
+      <div className="container mx-auto py-12 px-4 md:px-6">
+        <div className="mb-8">
+            <Button asChild variant="outline">
+              <Link href="/">
+                  <ArrowLeft className="mr-2 h-4 w-4"/>
+                  Back to Home
+              </Link>
+            </Button>
         </div>
-      </main>
+        <Card>
+          <CardHeader>
+            <CardTitle>About Oriango MicroFinance</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 text-lg text-muted-foreground">
+            <p>
+              Oriango is dedicated to providing financial empowerment through accessible and transparent micro-finance solutions. We believe in supporting local entrepreneurs and individuals to achieve their goals and build a better future. 
+            </p>
+            <p>
+              Our mission is to foster economic growth from the ground up, with a focus on community, trust, and support. We leverage technology to create a clear, simple, and efficient money lending system that puts the power back in your hands.
+            </p>
+            <p>
+              Whether you're looking to expand your business, cover an emergency expense, or invest in your future, Oriango provides a reliable and supportive platform to help you on your journey. Our process is designed to be straightforward and fast, ensuring you get the funds you need when you need them.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
       <Footer />
-    </div>
+    </>
   );
 }
+
