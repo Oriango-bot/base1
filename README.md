@@ -49,7 +49,3 @@ The application will be available at `http://localhost:9002`.
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
 - **Form Management**: [React Hook Form](https://react-hook-form.com/) with [Zod](https://zod.dev/) for validation
 - **Authentication**: `bcrypt.js` for password hashing
-
-This project was bootstrapped with Firebase Studio.
-
-    
