@@ -152,7 +152,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
 
   const form = useForm<LoanFormValues>({
     resolver: zodResolver(loanSchema),
-    defaultValues: getInitialValues(),
+    defaultValues: getInitialValues,
     mode: 'onChange',
   });
 
@@ -213,7 +213,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
         description: `Your application (ID: ${result.loanId.slice(-6)}) is now pending review.`,
       });
       localStorage.removeItem(storageKey); // Clear saved data on success
-      form.reset();
+      form.reset(getInitialValues()); // Reset with initial state
       setStep(1);
       setOpen(false);
       router.refresh(); 
@@ -449,5 +449,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     </Dialog>
   );
 }
+    
 
     
