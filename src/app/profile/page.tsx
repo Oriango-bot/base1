@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useRouter } from 'next/navigation';
@@ -70,6 +71,7 @@ export default function ProfilePage() {
   }
 
   const scoreInfo = getCreditScoreTier(user.creditScore);
+  const lastHistoryEntry = user.creditScoreHistory && user.creditScoreHistory.length > 0 ? user.creditScoreHistory[0] : null;
 
   return (
     <div className="space-y-6">
@@ -122,7 +124,11 @@ export default function ProfilePage() {
                     {user.creditScore}
                 </div>
                 <p className={`font-semibold mt-2 ${scoreInfo.color}`}>{scoreInfo.tier}</p>
-                <p className="text-xs text-muted-foreground mt-1">Updated on {new Date(user.creditScoreHistory[0]?.date || user.joinDate).toLocaleDateString()}</p>
+                {lastHistoryEntry && (
+                   <p className="text-xs text-muted-foreground mt-1">
+                    Last updated: {new Date(lastHistoryEntry.date).toLocaleDateString()}
+                   </p>
+                )}
             </CardContent>
         </Card>
 
@@ -131,3 +137,4 @@ export default function ProfilePage() {
     </div>
   );
 }
+

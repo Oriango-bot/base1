@@ -166,7 +166,7 @@ export async function signupUser(data: FormData): Promise<{ user: User | null; e
       creditScore: 500, // Starting credit score
       creditScoreHistory: [{
           date: new Date().toISOString(),
-          change: 500,
+          change: 0,
           reason: 'Account created.',
           newScore: 500,
       }],
@@ -235,7 +235,7 @@ export async function addUserByAdmin(formData: FormData): Promise<{ user: User |
       creditScore: 500, // Starting credit score
       creditScoreHistory: [{
           date: new Date().toISOString(),
-          change: 500,
+          change: 0,
           reason: 'Account created by admin.',
           newScore: 500,
       }],
@@ -968,3 +968,4 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
 
 
     
+
