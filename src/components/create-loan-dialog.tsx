@@ -17,19 +17,23 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Loader2, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Loader2, ArrowLeft, Building } from 'lucide-react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
-import { createLoan } from '@/app/actions';
+import { createLoan, getPartners } from '@/app/actions';
 import type { User } from '@/lib/types';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { Checkbox } from './ui/checkbox';
 import { RadioGroup, RadioGroupItem } from './ui/radio-group';
 import { Form, FormField, FormItem, FormControl, FormLabel, FormMessage } from '@/components/ui/form';
+import { useAuth } from '@/hooks/use-auth';
 
 const loanSchema = z.object({
+  // Step 0 - Admin only
+  partnerId: z.coerce.number().int().positive('Partner ID is required.'),
+
   // Step 1
   idNumber: z.string().min(5, 'A valid ID/Passport number is required.'),
   dob: z.string().refine((val) => !isNaN(Date.parse(val)), { message: "A valid date of birth is required." }),
@@ -75,7 +79,7 @@ const loanSchema = z.object({
 })
 .refine(data => {
     if (data.sourceOfIncome === 'other') {
-        return !!data.sourceOfIncomeOther && data.sourceOfIncomeOther.length > 2;
+        return !!data.sourceOfIncomeOther && data.sourceOfKinOther.length > 2;
     }
     return true;
 }, {
@@ -94,6 +98,7 @@ const loanSchema = z.object({
 
 
 type LoanFormValues = z.infer<typeof loanSchema>;
+type Partner = { id: number; name: string };
 
 interface CreateLoanDialogProps {
     borrowerId: string;
@@ -111,15 +116,19 @@ const loanPurposes = [
 export default function CreateLoanDialog({ borrowerId, canApply = true }: CreateLoanDialogProps) {
   const [open, setOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user: currentUser } = useAuth();
   const [step, setStep] = useState(1);
+  const [partners, setPartners] = useState<Partner[]>([]);
   const router = useRouter();
   
   const storageKey = `loan_form_data_${borrowerId}`;
+  
+  const isUserAdmin = currentUser?.role === 'admin' || currentUser?.role === 'super-admin';
 
   const getInitialValues = () => {
     if (typeof window === 'undefined') {
         return {
+            partnerId: 1, // Default Oriango
             loanPurpose: [],
             repaymentSchedule: 'monthly',
             hasCollateral: false,
@@ -132,7 +141,8 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     }
 
     const savedData = localStorage.getItem(storageKey);
-    const initialValues = savedData ? JSON.parse(savedData) : {
+    return savedData ? JSON.parse(savedData) : {
+        partnerId: currentUser?.partnerId || 1,
         loanPurpose: [],
         repaymentSchedule: 'monthly',
         hasCollateral: false,
@@ -142,9 +152,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
         attachments_businessLicense: false,
         attachments_passportPhoto: false,
     };
-    
-    // Defer setting signature until user is loaded from client-side storage
-    return initialValues;
   }
 
   const form = useForm<LoanFormValues>({
@@ -153,18 +160,21 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     mode: 'onChange',
   });
 
-  // Effect to load user from localStorage and set signature
   useEffect(() => {
-    // This effect runs only on the client
-    const storedUser = localStorage.getItem('loggedInUser');
-    if (storedUser) {
-        const parsedUser = JSON.parse(storedUser);
-        setCurrentUser(parsedUser);
-        if (!form.getValues('declarationSignature')) {
-           form.setValue('declarationSignature', parsedUser.name, { shouldValidate: true, shouldDirty: true });
+    if (currentUser) {
+        form.setValue('declarationSignature', currentUser.name, { shouldValidate: true, shouldDirty: true });
+        if (!isUserAdmin) {
+            form.setValue('partnerId', currentUser.partnerId, { shouldValidate: true, shouldDirty: true });
         }
     }
-  }, [form]);
+  }, [currentUser, form, isUserAdmin]);
+  
+  useEffect(() => {
+    if (isUserAdmin && open) {
+        getPartners().then(setPartners);
+    }
+  }, [isUserAdmin, open]);
+
 
   // Effect to save form data to localStorage
   useEffect(() => {
@@ -201,7 +211,6 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
 
     formData.append('borrowerId', borrowerId);
     formData.append('createdBy', currentUser.id);
-    formData.append('partnerId', String(currentUser.partnerId));
 
     const result = await createLoan(formData);
     setIsLoading(false);
@@ -209,7 +218,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     if (result.success && result.loanId) {
       toast({
         title: 'Loan Application Submitted',
-        description: `Your application (ID: ${result.loanId.slice(-6)}) is now pending review.`,
+        description: `Your application form number is being generated and will be reviewed shortly.`,
       });
       localStorage.removeItem(storageKey); // Clear saved data on success
       form.reset(getInitialValues()); // Reset with initial state
@@ -224,15 +233,26 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
       });
     }
   };
+  
+  const totalSteps = 5;
 
   const nextStep = async () => {
     let fields: (keyof LoanFormValues)[] = [];
-    if (step === 1) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
+    if (step === 1 && isUserAdmin) fields.push('partnerId');
+    if (step === 1 && !isUserAdmin) fields = ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact'];
     if (step === 2) fields = ['occupation', 'employerName', 'workLocation', 'workLandmark', 'monthlyIncome', 'sourceOfIncome', 'sourceOfIncomeOther'];
     if (step === 3) fields = ['productType', 'amount', 'loanPurpose', 'loanPurposeOther', 'repaymentSchedule'];
     if (step === 4) fields = ['hasCollateral', 'collateral1', 'collateralValue', 'guarantor1Name', 'guarantor1Id', 'guarantor1Phone'];
+    if (step === 5) fields = ['attachments_idCopy', 'declarationSignature'];
     
-    const isValid = await trigger(fields);
+    const fieldsToValidate = step === 1 && isUserAdmin 
+      ? ['partnerId'] 
+      : step === 1 && !isUserAdmin
+      ? ['idNumber', 'dob', 'nextOfKinName', 'nextOfKinRelationship', 'nextOfKinContact']
+      : fields;
+
+    const isValid = await trigger(fieldsToValidate as any);
+
     if (isValid) {
       setStep(s => s + 1);
     } else {
@@ -271,16 +291,42 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
         <Form {...form}>
           <form onSubmit={handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>New Loan Application (Step {step} of 5)</DialogTitle>
+              <DialogTitle>New Loan Application (Step {isUserAdmin ? step : step} of {totalSteps})</DialogTitle>
               <DialogDescription>
                 Please fill out all sections of the form accurately. Your progress is saved automatically.
               </DialogDescription>
             </DialogHeader>
             
             <div className="py-4 space-y-4 max-h-[60vh] overflow-y-auto pr-6">
-              {step === 1 && (
+              
+              {isUserAdmin && step === 1 && (
                   <section className="space-y-4">
-                      <h3 className="font-semibold">1. Applicant Details</h3>
+                      <h3 className="font-semibold">1. Partner Selection</h3>
+                       <Controller
+                          name="partnerId"
+                          control={control}
+                          render={({ field }) => (
+                            <FormItem>
+                                <FormLabel className="flex items-center gap-2"><Building/> Select Partner</FormLabel>
+                                <Select onValueChange={(value) => field.onChange(Number(value))} defaultValue={String(field.value)}>
+                                    <SelectTrigger>
+                                        <SelectValue placeholder="Select the partner for this loan" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        {partners.map(p => (
+                                            <SelectItem key={p.id} value={String(p.id)}>{p.name}</SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                                {errors.partnerId && <p className="text-destructive text-xs mt-1">{errors.partnerId.message}</p>}
+                            </FormItem>
+                        )}/>
+                  </section>
+              )}
+              
+              {(!isUserAdmin && step === 1) || (isUserAdmin && step === 2) && (
+                  <section className="space-y-4">
+                      <h3 className="font-semibold">{isUserAdmin ? '2.' : '1.'} Applicant Details</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div><Label htmlFor="idNumber">ID/Passport Number</Label><Input id="idNumber" {...register('idNumber')} />{errors.idNumber && <p className="text-destructive text-xs mt-1">{errors.idNumber.message}</p>}</div>
                           <div><Label htmlFor="dob">Date of Birth</Label><Input id="dob" type="date" {...register('dob')} />{errors.dob && <p className="text-destructive text-xs mt-1">{errors.dob.message}</p>}</div>
@@ -290,9 +336,9 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                       </div>
                   </section>
               )}
-              {step === 2 && (
+              {(!isUserAdmin && step === 2) || (isUserAdmin && step === 3) && (
                   <section className="space-y-4">
-                       <h3 className="font-semibold">2. Employment / Business Information</h3>
+                       <h3 className="font-semibold">{isUserAdmin ? '3.' : '2.'} Employment / Business Information</h3>
                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <div><Label htmlFor="occupation">Occupation / Business Type</Label><Input id="occupation" {...register('occupation')} />{errors.occupation && <p className="text-destructive text-xs mt-1">{errors.occupation.message}</p>}</div>
                           <div><Label htmlFor="employerName">Employer / Business Name</Label><Input id="employerName" {...register('employerName')} />{errors.employerName && <p className="text-destructive text-xs mt-1">{errors.employerName.message}</p>}</div>
@@ -325,9 +371,9 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                       )}
                   </section>
               )}
-              {step === 3 && (
+               {(!isUserAdmin && step === 3) || (isUserAdmin && step === 4) && (
                    <section className="space-y-4">
-                      <h3 className="font-semibold">3. Loan Details</h3>
+                      <h3 className="font-semibold">{isUserAdmin ? '4.' : '3.'} Loan Details</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <Controller name="productType" control={control} render={({ field }) => (
                               <FormItem><FormLabel>Loan Product Type</FormLabel><Select onValueChange={field.onChange} defaultValue={field.value}><SelectTrigger><SelectValue placeholder="Select Product" /></SelectTrigger><SelectContent><SelectItem value="biz-flex">Biz Flex</SelectItem><SelectItem value="hustle-flex">Hustle Flex</SelectItem><SelectItem value="rent-flex">Rent Flex</SelectItem></SelectContent></Select>{errors.productType && <p className="text-destructive text-xs mt-1">{errors.productType.message}</p>}</FormItem>
@@ -369,9 +415,9 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                       )}
                    </section>
               )}
-              {step === 4 && (
+               {(!isUserAdmin && step === 4) || (isUserAdmin && step === 5) && (
                   <section className="space-y-4">
-                      <h3 className="font-semibold">4. Security / Guarantors</h3>
+                      <h3 className="font-semibold">{isUserAdmin ? '5.' : '4.'} Security / Guarantors</h3>
                       <div className="flex items-center space-x-2">
                           <Controller name="hasCollateral" control={control} render={({field}) => (
                               <Checkbox id="hasCollateral" checked={field.value} onCheckedChange={field.onChange} />
@@ -399,9 +445,9 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
                       </div>
                   </section>
               )}
-               {step === 5 && (
+               {(!isUserAdmin && step === 5) || (isUserAdmin && step === 6) && (
                   <section className="space-y-4">
-                      <h3 className="font-semibold">5. Required Attachments & Declaration</h3>
+                      <h3 className="font-semibold">{isUserAdmin ? '6.' : '5.'} Required Attachments & Declaration</h3>
                       <p className="text-sm text-muted-foreground">Please confirm you have the following documents ready. You will be asked to provide them upon request. This does not upload the files.</p>
                        <div className="space-y-2">
                           <FormField control={control} name="attachments_idCopy" render={({field}) => (
@@ -436,8 +482,8 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
             <DialogFooter className="pt-4">
               {step > 1 && <Button type="button" variant="ghost" onClick={prevStep} disabled={isLoading}><ArrowLeft className="mr-2"/> Back</Button>}
               <div className="flex-grow"></div>
-              {step < 5 && <Button type="button" onClick={nextStep} disabled={isLoading}>Next</Button>}
-              {step === 5 && <Button type="submit" disabled={isLoading}>
+              {step < (isUserAdmin ? 6 : 5) && <Button type="button" onClick={nextStep} disabled={isLoading}>Next</Button>}
+              {step === (isUserAdmin ? 6 : 5) && <Button type="submit" disabled={isLoading}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Submit Application
               </Button>}
@@ -451,4 +497,5 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     
 
     
+
 

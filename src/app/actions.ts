@@ -391,19 +391,55 @@ export async function createLoan(formData: FormData) {
     const client = await clientPromise;
     const db = client.db("oriango");
     const loansCollection = db.collection('loans');
-    
-    // Generate a unique form number
+    const formSeriesCollection = db.collection<FormSeries>('form_series_register');
+
+    const series = await formSeriesCollection.findOne({ partner_id: partnerId, status: 'active' });
+
+    if (!series) {
+        return { success: false, error: `No active form series found for partner ID ${partnerId}. Please contact a super admin.` };
+    }
+
+    // --- Generate a unique form number based on the series ---
     let formNumber: string;
     let isUnique = false;
-    while (!isUnique) {
-        const uniquePart = randomBytes(4).toString('hex').toUpperCase();
-        // Assuming Oriango's partner ID is 1
-        formNumber = `P-${partnerId}-MLD-GEN-${uniquePart}`; 
+    let attempts = 0;
+    const maxAttempts = 20;
+
+    while (!isUnique && attempts < maxAttempts) {
+        // Find the highest existing number in this series to avoid collisions
+        const lastLoanInSeries = await loansCollection
+            .find({ formNumber: { $regex: `^${series.prefix}` } })
+            .sort({ formNumber: -1 })
+            .limit(1)
+            .toArray();
+
+        let nextNum = series.start_number;
+        if (lastLoanInSeries.length > 0) {
+            const lastNumStr = lastLoanInSeries[0].formNumber.split('-').pop();
+            const lastNum = lastNumStr ? parseInt(lastNumStr, 10) : 0;
+            if (!isNaN(lastNum) && lastNum >= series.start_number) {
+              nextNum = lastNum + 1;
+            }
+        }
+        
+        if (nextNum > series.end_number) {
+            // Optional: Handle series exhaustion. Maybe update series status.
+            return { success: false, error: `Form series for partner ${partnerId} has been exhausted.` };
+        }
+        
+        formNumber = `${series.prefix}-${String(nextNum).padStart(6, '0')}`;
+        
         const existingLoan = await loansCollection.findOne({ formNumber });
         if (!existingLoan) {
             isUnique = true;
         }
+        attempts++; // Increment attempts to prevent infinite loops on error
     }
+    
+    if (!isUnique) {
+        return { success: false, error: 'Failed to generate a unique form number. Please try again.' };
+    }
+    // --- End of form number generation ---
 
     const amount = parseFloat(formData.get('amount') as string);
     const interestRate = 15; // Standard 15% flat rate
@@ -779,7 +815,28 @@ export async function getDashboardStats() {
 }
 
 
-// --- Form Series Actions ---
+// --- Form Series & Partner Actions ---
+
+export async function getPartners(): Promise<{ id: number, name: string }[]> {
+    try {
+        const client = await clientPromise;
+        const db = client.db("oriango");
+        const apiKeys = await db.collection('api_keys').find({ enabled: true }).project({ partnerId: 1, partnerName: 1, _id: 0 }).toArray();
+        
+        const partners = apiKeys.map(key => ({
+            id: key.partnerId,
+            name: key.partnerName,
+        }));
+        
+        // Add Oriango as the default partner
+        return [{ id: 1, name: 'Oriango' }, ...partners];
+    } catch (error) {
+        console.error("Failed to get partners:", error);
+        // Fallback to only Oriango if there's an error
+        return [{ id: 1, name: 'Oriango' }];
+    }
+}
+
 
 export async function getFormSeries(): Promise<(FormSeries & { partnerName: string })[]> {
     try {
@@ -969,5 +1026,6 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
 
 
     
+
 
 
