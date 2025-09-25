@@ -10,7 +10,8 @@ import RecordRepaymentDialog from '@/components/record-repayment-dialog';
 import AiSummaryDialog from '@/components/ai-summary-dialog';
 import UpdateLoanStatus from '@/components/update-loan-status';
 
-export default async function LoanDetailPage({ params: { id } }: { params: { id: string } }) {
+export default async function LoanDetailPage({ params }: { params: { id: string } }) {
+  const { id } = params;
   const loan = await getLoanById(id);
   if (!loan) {
     notFound();
