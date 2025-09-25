@@ -501,7 +501,6 @@ export async function createLoan(formData: FormData) {
       issueDate: new Date().toISOString(),
       status: 'pending' as LoanStatus,
       statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
-      repayments: [],
       partnerId,
       createdBy,
     };
@@ -1041,7 +1040,3 @@ export async function getDbStats(): Promise<{dataSize: number; totalSize: number
   }
 }
     
-
-
-
-
