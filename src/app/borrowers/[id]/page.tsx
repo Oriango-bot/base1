@@ -10,8 +10,8 @@ import { ArrowRight, Calendar, Phone, Home, Mail } from 'lucide-react';
 import { calculateOutstandingBalance, formatCurrency } from '@/lib/utils';
 import CreateLoanDialog from '@/components/create-loan-dialog';
 
-export default async function UserDetailPage({ params }: { params: { id: string } }) {
-  const user = await getUserById(params.id);
+export default async function UserDetailPage({ params: { id } }: { params: { id: string } }) {
+  const user = await getUserById(id);
   if (!user) {
     notFound();
   }
