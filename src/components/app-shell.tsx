@@ -2,7 +2,7 @@
 
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -40,13 +40,31 @@ import { useAuth } from '@/hooks/use-auth';
 import { AnimatePresence, motion } from 'framer-motion';
 import AnnouncementBanner from './announcement-banner';
 import { ThemeSwitch } from './theme-switch';
+import LandingPageLoader from './landing-page-loader';
+
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { user, loading, logout } = useAuth();
+  const { user, loading: authLoading } = useAuth();
+  const [showLandingLoader, setShowLandingLoader] = useState(false);
 
   const publicPages = ['/login', '/signup', '/admin/login', '/admin/signup', '/forgot-password'];
   const landingPage = pathname === '/';
+
+  useEffect(() => {
+    if (landingPage) {
+      const isFirstVisit = sessionStorage.getItem('hasVisitedLanding') !== 'true';
+      if (isFirstVisit) {
+        setShowLandingLoader(true);
+        const timer = setTimeout(() => {
+          setShowLandingLoader(false);
+          sessionStorage.setItem('hasVisitedLanding', 'true');
+        }, 5000);
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [landingPage]);
+
 
   const isPublicPage = publicPages.includes(pathname);
   const isAuthPage = isPublicPage && !landingPage; // Login, signup, etc.
@@ -74,7 +92,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
     return 'Oriango';
   }
 
-  if (loading) {
+  if (authLoading) {
      return (
         <div className="flex h-screen w-full items-center justify-center bg-background">
           <motion.div
@@ -91,6 +109,10 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
           </motion.div>
         </div>
      )
+  }
+  
+  if (showLandingLoader) {
+    return <LandingPageLoader />;
   }
 
   if (!user && !landingPage) {
@@ -276,6 +298,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default AppShell;
+
 
 
 

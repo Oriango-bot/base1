@@ -1,4 +1,3 @@
-
 'use client';
 
 import { motion } from 'framer-motion';
@@ -30,13 +29,15 @@ const pathVariants = {
 };
 
 const innerCircleVariants = {
-    hidden: { scale: 0, opacity: 0 },
+    hidden: { scale: 0.95, opacity: 0 },
     visible: {
         scale: 1,
         opacity: 1,
         transition: {
-            duration: 0.8,
-            ease: 'backOut'
+            duration: 1,
+            ease: 'easeInOut',
+            repeat: Infinity,
+            repeatType: 'reverse',
         }
     }
 }
@@ -63,11 +64,11 @@ export default function LandingPageLoader() {
             />
             <motion.path
                 d="M32 49C41.3888 49 49 41.3888 49 32C49 22.6112 41.3888 15 32 15C22.6112 15 15 22.6112 15 32C15 41.3888 22.6112 49 32 49Z"
-                className="fill-background"
+                className="fill-background stroke-primary"
+                strokeWidth="2"
                 variants={innerCircleVariants}
             />
         </motion.svg>
     </div>
   );
 }
-
