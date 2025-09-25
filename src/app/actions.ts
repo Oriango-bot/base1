@@ -1024,8 +1024,24 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
   }
 }
 
-
+// --- Settings Actions ---
+export async function getDbStats(): Promise<{dataSize: number; totalSize: number; error: string | null}> {
+  try {
+    const client = await clientPromise;
+    const db = client.db("oriango");
+    const stats = await db.stats();
+    return {
+        dataSize: stats.dataSize,
+        totalSize: stats.storageSize,
+        error: null
+    };
+  } catch (error) {
+    console.error("Failed to fetch database stats:", error);
+    return { dataSize: 0, totalSize: 0, error: "Could not load database statistics." };
+  }
+}
     
+
 
 
 

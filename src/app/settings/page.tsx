@@ -1,19 +1,28 @@
 
+
 'use client';
 
 import { useRouter } from 'next/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, Construction } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import SuperAdminSettings from '@/components/super-admin-system-settings';
+import UserAppearanceSettings from '@/components/user-appearance-settings';
 
 export default function SettingsPage() {
     const { user, loading } = useAuth();
     const router = useRouter();
 
     if (loading) {
-        return <Skeleton className="h-64 w-full" />;
+        return (
+            <div className="space-y-6">
+                <Skeleton className="h-10 w-48" />
+                <Skeleton className="h-64 w-full" />
+                <Skeleton className="h-64 w-full" />
+            </div>
+        );
     }
     
     if (!user) {
@@ -38,17 +47,18 @@ export default function SettingsPage() {
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back to Dashboard
             </Button>
-            <Card className="max-w-2xl mx-auto">
+            <Card>
                 <CardHeader>
                 <CardTitle>Settings</CardTitle>
-                <CardDescription>Manage your account settings.</CardDescription>
+                <CardDescription>Manage your account and application settings.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col items-center justify-center text-center p-8 border-2 border-dashed rounded-lg">
-                        <Construction className="h-16 w-16 text-muted-foreground mb-4" />
-                        <h3 className="text-xl font-semibold">Under Construction</h3>
-                        <p className="text-muted-foreground">This page is currently being developed. Please check back later.</p>
-                    </div>
+                <CardContent className="space-y-8">
+                  {user.role === 'super-admin' && (
+                    <SuperAdminSettings />
+                  )}
+                   {(user.role === 'user' || user.role === 'admin') && (
+                    <UserAppearanceSettings />
+                  )}
                 </CardContent>
             </Card>
         </div>
