@@ -76,11 +76,19 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 
   if (loading) {
      return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="flex items-center gap-2">
-            <Skeleton className="h-8 w-8 rounded-full" />
-            <Skeleton className="h-6 w-32" />
-          </div>
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              duration: 0.5,
+              repeat: Infinity,
+              repeatType: "reverse",
+              ease: "easeInOut",
+            }}
+          >
+            <OriangoLogo className="h-20 w-20 text-primary" />
+          </motion.div>
         </div>
      )
   }
@@ -268,5 +276,6 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default AppShell;
+
 
 
