@@ -2,14 +2,37 @@
 
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { FileText, FileSearch, Wallet, Menu, Zap, Repeat, HandCoins, Users } from 'lucide-react';
 import Footer from '@/components/footer';
 import LoanEligibilityCalculator from '@/components/loan-eligibility-calculator';
+import LandingPageLoader from '@/components/landing-page-loader';
 
 export default function HomePage() {
+  const [showLoader, setShowLoader] = useState(true);
+
+  useEffect(() => {
+    const isFirstVisit = sessionStorage.getItem('hasVisitedLanding') !== 'true';
+
+    if (isFirstVisit) {
+      const timer = setTimeout(() => {
+        setShowLoader(false);
+        sessionStorage.setItem('hasVisitedLanding', 'true');
+      }, 5000);
+
+      return () => clearTimeout(timer);
+    } else {
+      setShowLoader(false);
+    }
+  }, []);
+
+  if (showLoader) {
+    return <LandingPageLoader />;
+  }
+
   return (
     <>
       <main className="flex-1">
@@ -166,4 +189,3 @@ export default function HomePage() {
     </>
   );
 }
-
