@@ -45,7 +45,7 @@ import LandingPageLoader from './landing-page-loader';
 
 const AppShell = ({ children }: { children: React.ReactNode }) => {
   const pathname = usePathname();
-  const { user, loading: authLoading } = useAuth();
+  const { user, loading: authLoading, logout } = useAuth();
   const [showLandingLoader, setShowLandingLoader] = useState(false);
 
   const publicPages = ['/login', '/signup', '/admin/login', '/admin/signup', '/forgot-password'];
@@ -298,6 +298,7 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default AppShell;
+
 
 
 
