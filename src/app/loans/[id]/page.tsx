@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
+import { notFound, useParams } from 'next/navigation';
 import { getLoanById, getUserById } from '@/app/actions';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -18,7 +18,9 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 type StatusHistoryWithChanger = StatusHistoryEntry & { changerName: string };
 
-export default function LoanDetailPage({ params: { id } }: { params: { id: string } }) {
+export default function LoanDetailPage() {
+  const params = useParams();
+  const id = params.id as string;
   const { user: currentUser, loading: authLoading } = useAuth();
   const [loan, setLoan] = useState<Loan | null>(null);
   const [user, setUser] = useState<UserType | null>(null);
