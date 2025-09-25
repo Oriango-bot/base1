@@ -17,7 +17,7 @@ import {
   SidebarTrigger,
   SidebarFooter as SidebarFooterComponent,
 } from '@/components/ui/sidebar';
-import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey, KeyRound, Menu } from 'lucide-react';
+import { Home, Users, Landmark, CircleUser, UserCog, LogOut, ShieldCheck, FileKey, KeyRound, Menu, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -164,6 +164,8 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
   
   const navItems = [
     { href: '/dashboard', label: 'Dashboard', icon: Home, roles: ['user'] },
+    { href: '/profile', label: 'My Profile', icon: CircleUser, roles: ['user'] },
+    { href: '/settings', label: 'Settings', icon: Settings, roles: ['user'] },
     { href: '/admin/dashboard', label: 'Admin Dashboard', icon: ShieldCheck, roles: ['admin'] },
     { href: '/super-admin/dashboard', label: 'SA Dashboard', icon: ShieldCheck, roles: ['super-admin'] },
     { href: '/borrowers', label: 'Users', icon: Users, roles: ['admin', 'super-admin'] },
@@ -266,4 +268,5 @@ const AppShell = ({ children }: { children: React.ReactNode }) => {
 };
 
 export default AppShell;
+
 
