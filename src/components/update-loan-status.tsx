@@ -54,6 +54,10 @@ export default function UpdateLoanStatus({ loan }: { loan: Loan }) {
   };
   
   const availableStatuses: LoanStatus[] = ['pending', 'approved', 'rejected', 'active', 'paid'];
+  
+  if (currentUser?.role !== 'admin' && currentUser?.role !== 'super-admin') {
+    return null;
+  }
 
   return (
     <Card>
@@ -63,7 +67,7 @@ export default function UpdateLoanStatus({ loan }: { loan: Loan }) {
       </CardHeader>
       <CardContent className="space-y-4">
         <Select value={newStatus} onValueChange={(value) => setNewStatus(value as LoanStatus)}>
-          <SelectTrigger disabled={isLoading || currentUser?.role === 'user'}>
+          <SelectTrigger disabled={isLoading}>
             <SelectValue placeholder="Select a status" />
           </SelectTrigger>
           <SelectContent>
@@ -72,7 +76,7 @@ export default function UpdateLoanStatus({ loan }: { loan: Loan }) {
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={handleStatusUpdate} disabled={isLoading || newStatus === loan.status || currentUser?.role === 'user'} className="w-full">
+        <Button onClick={handleStatusUpdate} disabled={isLoading || newStatus === loan.status} className="w-full">
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Update Status
         </Button>
