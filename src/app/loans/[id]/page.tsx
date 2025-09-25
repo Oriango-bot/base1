@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -15,6 +14,7 @@ import UpdateLoanStatus from '@/components/update-loan-status';
 import { useAuth } from '@/hooks/use-auth';
 import type { Loan, User as UserType, StatusHistoryEntry } from '@/lib/types';
 import { Skeleton } from '@/components/ui/skeleton';
+import DownloadLoanFormButton from '@/components/download-loan-form-button';
 
 type StatusHistoryWithChanger = StatusHistoryEntry & { changerName: string };
 
@@ -55,7 +55,7 @@ export default function LoanDetailPage() {
     fetchLoanData();
   }, [id]);
 
-  if (authLoading || isLoading || !loan) {
+  if (authLoading || isLoading || !loan || !user) {
     return (
         <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
@@ -91,6 +91,7 @@ export default function LoanDetailPage() {
         </div>
         {isUserAdmin && (
             <div className="flex gap-2">
+              <DownloadLoanFormButton loan={loan} borrower={user} />
               <AiSummaryDialog loan={loan} />
               <RecordRepaymentDialog loanId={loan.id} />
             </div>
