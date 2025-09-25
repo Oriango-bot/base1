@@ -381,8 +381,9 @@ export async function adminUpdatePassword(adminId: string, targetUserId: string,
 export async function createLoan(formData: FormData) {
   const borrowerId = formData.get('borrowerId') as string;
   const createdBy = formData.get('createdBy') as string;
+  const partnerId = parseInt(formData.get('partnerId') as string, 10);
 
-  if (!borrowerId || !createdBy) {
+  if (!borrowerId || !createdBy || isNaN(partnerId)) {
     return { success: false, error: 'Missing required system data.' };
   }
   
@@ -397,7 +398,7 @@ export async function createLoan(formData: FormData) {
     while (!isUnique) {
         const uniquePart = randomBytes(4).toString('hex').toUpperCase();
         // Assuming Oriango's partner ID is 1
-        formNumber = `P-1-MLD-GEN-${uniquePart}`; 
+        formNumber = `P-${partnerId}-MLD-GEN-${uniquePart}`; 
         const existingLoan = await loansCollection.findOne({ formNumber });
         if (!existingLoan) {
             isUnique = true;
@@ -465,7 +466,7 @@ export async function createLoan(formData: FormData) {
       status: 'pending' as LoanStatus,
       statusHistory: [{ status: 'pending' as LoanStatus, date: new Date().toISOString(), changedBy: createdBy }],
       repayments: [],
-      partnerId: 1, 
+      partnerId,
       createdBy,
     };
 
@@ -968,4 +969,5 @@ export async function deleteApiKey(keyId: string): Promise<{ success: boolean; e
 
 
     
+
 

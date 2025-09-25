@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -200,6 +201,7 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
 
     formData.append('borrowerId', borrowerId);
     formData.append('createdBy', currentUser.id);
+    formData.append('partnerId', String(currentUser.partnerId));
 
     const result = await createLoan(formData);
     setIsLoading(false);
@@ -449,3 +451,4 @@ export default function CreateLoanDialog({ borrowerId, canApply = true }: Create
     
 
     
+
