@@ -21,6 +21,7 @@ import CreateLoanDialog from "@/components/create-loan-dialog";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
+import { Button } from "@/components/ui/button";
 
 export default function Dashboard() {
   const { user, loading: authLoading } = useAuth();
@@ -34,7 +35,9 @@ export default function Dashboard() {
       getLoansForUser(user.id)
         .then(loans => {
           setUserLoans(loans.sort((a, b) => new Date(b.issueDate).getTime() - new Date(a.issueDate).getTime()));
-          setIsLoading(false);
+        })
+        .finally(() => {
+            setIsLoading(false);
         });
     } else if (!authLoading) {
         setIsLoading(false);
@@ -241,5 +244,7 @@ function DashboardSkeleton() {
     </div>
   )
 }
+
+    
 
     
